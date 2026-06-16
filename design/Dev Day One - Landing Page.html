@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dev Day One — AI Repository Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: #080D1A; color: #EEF0FA; font-family: 'Inter', -apple-system, sans-serif; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 2px; }
+
+    @keyframes blobA {
+      0%,100% { transform: translate(0,0) scale(1); }
+      30%  { transform: translate(60px,-40px) scale(1.12); }
+      65%  { transform: translate(-30px,50px) scale(0.9); }
+    }
+    @keyframes blobB {
+      0%,100% { transform: translate(0,0) scale(1); }
+      45%  { transform: translate(-70px,30px) scale(1.18); }
+    }
+    @keyframes blobC {
+      0%,100% { transform: translate(0,0) scale(1); }
+      35%  { transform: translate(40px,-60px) scale(0.88); }
+      70%  { transform: translate(-20px,30px) scale(1.08); }
+    }
+    @keyframes chipRise {
+      0%   { opacity: 0;    transform: translateY(0px); }
+      12%  { opacity: 0.45; }
+      88%  { opacity: 0.18; }
+      100% { opacity: 0;    transform: translateY(-320px); }
+    }
+    @keyframes dotPulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.5); }
+      50%     { box-shadow: 0 0 0 5px rgba(16,185,129,0); }
+    }
+    @keyframes blink   { 0%,100% { opacity:1; } 50% { opacity:0; } }
+    @keyframes dotBounce {
+      0%,60%,100% { transform: translateY(0); }
+      30%         { transform: translateY(-5px); }
+    }
+    @keyframes fadeInUp {
+      from { opacity:0; transform:translateY(14px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    @keyframes shimmerBtn {
+      0%   { left: -120%; }
+      100% { left:  160%; }
+    }
+    @keyframes aiIn {
+      from { opacity:0; transform:translateY(6px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .nav-glass {
+      position: fixed; top:0; left:0; right:0; z-index:100;
+      height: 52px;
+      display: flex; align-items:center; justify-content:space-between;
+      padding: 0 48px;
+      border-bottom: 1px solid rgba(120,140,200,0.10);
+      backdrop-filter: blur(18px) saturate(1.4);
+      background: rgba(8,13,26,0.72);
+    }
+    .blob {
+      position: absolute; border-radius: 50%; pointer-events: none;
+      filter: blur(80px); will-change: transform;
+    }
+    .blob-a { width:640px; height:560px; background:rgba(99,102,241,0.14); animation: blobA 14s ease-in-out infinite; }
+    .blob-b { width:480px; height:420px; background:rgba(139,92,246,0.10); animation: blobB 18s ease-in-out infinite; }
+    .blob-c { width:360px; height:320px; background:rgba(16,185,129,0.06); animation: blobC 22s ease-in-out infinite; }
+
+    .chip-float {
+      position: absolute; font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; color: rgba(130,150,200,0.5);
+      border: 1px solid rgba(120,140,200,0.10);
+      background: rgba(13,21,38,0.6);
+      padding: 3px 9px; border-radius: 20px;
+      animation: chipRise linear infinite;
+      pointer-events: none; white-space: nowrap;
+      bottom: 0;
+    }
+    .cta-btn {
+      position: relative; overflow: hidden;
+      display: inline-flex; align-items:center; gap:8px;
+      padding: 12px 24px; border-radius: 9px;
+      background: #6366F1; color: #fff;
+      font-size: 13px; font-weight: 600; cursor: pointer; border: none;
+      font-family: inherit;
+    }
+    .cta-btn::after {
+      content: '';
+      position: absolute; top: 0; height: 100%; width: 60%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      animation: shimmerBtn 3.5s ease-in-out infinite;
+    }
+    .ghost-btn {
+      display: inline-flex; align-items:center; gap:8px;
+      padding: 12px 22px; border-radius: 9px;
+      border: 1px solid rgba(120,140,200,0.18);
+      color: #8892B0; font-size:13px; cursor:pointer;
+      background: transparent; font-family: inherit;
+      white-space: nowrap;
+    }
+    .section-feat  { background: #080D1A; padding: 80px 0; }
+    .section-hiw   { background: #0D1526; padding: 80px 0; border-top: 1px solid rgba(120,140,200,0.08); }
+    .section-cta   { background: #080D1A; padding: 80px 0; border-top: 1px solid rgba(120,140,200,0.08); }
+
+    .feat-row {
+      display: grid; grid-template-columns: 40px 1fr;
+      gap: 24px; padding: 24px 0;
+      border-top: 1px solid rgba(120,140,200,0.08);
+      align-items: baseline;
+    }
+    .hiw-row {
+      display: grid; grid-template-columns: 24px 1fr;
+      gap: 24px; padding: 22px 0;
+      border-top: 1px solid rgba(120,140,200,0.08);
+      align-items: baseline;
+    }
+    .product-wrap {
+      perspective: 1200px;
+      flex-shrink: 0;
+    }
+    .product-card {
+      transform: perspective(1200px) rotateY(-8deg) rotateX(3deg);
+      transition: transform 0.8s cubic-bezier(0.23,1,0.32,1);
+      border-radius: 14px;
+      border: 1px solid rgba(120,140,200,0.18);
+      overflow: hidden;
+      box-shadow: 0 48px 96px rgba(0,0,0,0.6), 0 0 0 1px rgba(120,140,200,0.06), inset 0 1px 0 rgba(255,255,255,0.04);
+      background: #0D1526;
+      will-change: transform;
+    }
+    .product-card:hover {
+      transform: perspective(1200px) rotateY(-2deg) rotateX(1deg);
+    }
+    .dot-pulse { animation: dotPulse 2.2s ease-in-out infinite; }
+    .cursor-blink { display:inline-block; width:7px; height:13px; background:#6366F1; margin-left:2px; animation: blink 1s step-end infinite; vertical-align: middle; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const L = {
+      bg:'#080D1A', surface:'#0D1526', card:'#111D33', raised:'#16243E',
+      accent:'#6366F1', accentB:'#818CF8', success:'#10B981',
+      text:'#EEF0FA', text2:'#8892B0', muted:'#4A5578',
+      border:'rgba(120,140,200,0.10)', borderB:'rgba(120,140,200,0.18)',
+    }
+
+    // ── Icons ──────────────────────────────────────────────────────────────────
+    function Arr({ size=12 }) {
+      return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+        <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+      </svg>
+    }
+    function SparkleIco({ size=10 }) {
+      return <svg width={size} height={size} viewBox="0 0 24 24" fill="#818CF8">
+        <path d="M12 2l2.09 7.02L22 12l-7.91 2.98L12 22l-2.09-7.02L2 12l7.91-2.98z"/>
+      </svg>
+    }
+    function SendIco() {
+      return <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
+        <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+      </svg>
+    }
+
+    // ── Floating background chips ──────────────────────────────────────────────
+    const CHIPS = [
+      { label:'vercel/next.js',     x:'6%',  dur:'13s', delay:'0s'   },
+      { label:'stripe/stripe-node', x:'21%', dur:'17s', delay:'2.5s' },
+      { label:'acme/backend-api',   x:'38%', dur:'14s', delay:'5s'   },
+      { label:'facebook/react',     x:'58%', dur:'11s', delay:'1.5s' },
+      { label:'microsoft/vscode',   x:'74%', dur:'15s', delay:'4s'   },
+      { label:'trpc/trpc',          x:'88%', dur:'12s', delay:'7s'   },
+    ]
+    function FloatingChips() {
+      return (
+        <>
+          {CHIPS.map(c => (
+            <span key={c.label} className="chip-float"
+              style={{ left:c.x, animationDuration:c.dur, animationDelay:c.delay }}>{c.label}</span>
+          ))}
+        </>
+      )
+    }
+
+    // ── Background blob layers ─────────────────────────────────────────────────
+    function BgLayers() {
+      return (
+        <div style={{ position:'absolute', inset:0, overflow:'hidden', pointerEvents:'none', zIndex:0 }}>
+          {/* Dot grid */}
+          <div style={{ position:'absolute', inset:0,
+            backgroundImage:`radial-gradient(rgba(120,140,200,0.12) 1px, transparent 1px)`,
+            backgroundSize:'40px 40px' }} />
+          {/* Blobs */}
+          <div className="blob blob-a" style={{ top:'-10%', left:'-8%' }} />
+          <div className="blob blob-b" style={{ top:'20%', right:'-12%' }} />
+          <div className="blob blob-c" style={{ bottom:'10%', left:'30%' }} />
+        </div>
+      )
+    }
+
+    // ── Mini product UI — animated chat ────────────────────────────────────────
+    const MINI_PAGES = ['Overview','Ask','Architecture','Patterns','Impact']
+    const CHAT_SEQUENCE = [
+      { q:'Where is auth handled?',         phase:'idle'     },
+      { q:'Where is auth handled?',         phase:'typing'   },
+      { q:'Where is auth handled?',         phase:'response', ans:'Auth lives in lib/supabase/ — JWT cookies for SSR, browser client for CSR.', files:['lib/supabase/client.ts','lib/supabase/server.ts'] },
+      { q:'How are API errors structured?', phase:'idle'     },
+      { q:'How are API errors structured?', phase:'typing'   },
+      { q:'How are API errors structured?', phase:'response', ans:'Errors flow through apiFetch() in lib/api/client.ts — formatted before reaching the UI layer.', files:['lib/api/client.ts'] },
+    ]
+    function ProductUI() {
+      const [step, setStep] = useState(0)
+      useEffect(() => {
+        const delays = [1600, 1400, 2600, 1600, 1400, 2800]
+        const tid = setTimeout(() => setStep(s => (s + 1) % CHAT_SEQUENCE.length), delays[step])
+        return () => clearTimeout(tid)
+      }, [step])
+      const cur = CHAT_SEQUENCE[step]
+
+      return (
+        <div className="product-wrap" style={{ width:500 }}>
+          <div className="product-card" style={{ width:500 }}>
+            {/* Window chrome */}
+            <div style={{ display:'flex', alignItems:'center', height:30, borderBottom:`1px solid ${L.border}`, background:L.card, padding:'0 12px', gap:5 }}>
+              {['#FF5F57','#FEBC2E','#28C840'].map(c => <div key={c} style={{ width:9,height:9,borderRadius:'50%',background:c }} />)}
+              <span style={{ marginLeft:'auto', fontFamily:'monospace', fontSize:9, color:L.muted }}>app.devdayone.io</span>
+            </div>
+            <div style={{ display:'flex', height:330 }}>
+              {/* Sidebar */}
+              <div style={{ width:144, borderRight:`1px solid ${L.border}`, background:L.card, display:'flex', flexDirection:'column', flexShrink:0 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:7, padding:'10px', borderBottom:`1px solid ${L.border}` }}>
+                  <div style={{ width:18,height:18,borderRadius:4,background:L.accent,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
+                <svg width="11" height="11" viewBox="0 0 80 80" fill="none">
+                  <polyline points="30,12 12,40 30,68" stroke="white" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"/>
+                  <polyline points="50,12 68,40 50,68" stroke="white" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M40 26 L42.8 37.2 L54 40 L42.8 42.8 L40 54 L37.2 42.8 L26 40 L37.2 37.2 Z" fill="white" opacity="0.85"/>
+                </svg>
+              </div>
+                  <span style={{ fontSize:10, fontWeight:700, color:L.text }}>Dev Day One</span>
+                </div>
+                <div style={{ padding:'8px 6px', flex:1 }}>
+                  <div style={{ fontSize:7.5, color:L.muted, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:6, paddingLeft:4 }}>Repositories</div>
+                  {/* Active repo */}
+                  <div style={{ padding:'5px 6px', borderRadius:5, background:L.raised, border:'1px solid rgba(99,102,241,0.2)', marginBottom:4 }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+                      <div className="dot-pulse" style={{ width:5,height:5,borderRadius:'50%',background:L.success,flexShrink:0 }} />
+                      <span style={{ fontSize:9, fontWeight:600, color:L.text }}>next.js</span>
+                    </div>
+                  </div>
+                  {/* Sub-pages */}
+                  <div style={{ paddingLeft:8, borderLeft:`1px solid rgba(255,255,255,0.05)`, marginLeft:4 }}>
+                    {MINI_PAGES.map((p,i) => (
+                      <div key={p} style={{ padding:'3px 7px', borderRadius:3, fontSize:9, marginBottom:1,
+                        color: i===1 ? L.accentB : L.muted,
+                        background: i===1 ? 'rgba(99,102,241,0.1)' : 'transparent',
+                        borderLeft: i===1 ? `2px solid ${L.accent}` : '2px solid transparent',
+                        fontWeight: i===1 ? 600 : 400 }}>{p}</div>
+                    ))}
+                  </div>
+                  {/* Other repos */}
+                  {['my-app','devtools'].map(r => (
+                    <div key={r} style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 6px', borderRadius:5, marginTop:4 }}>
+                      <div style={{ width:5,height:5,borderRadius:'50%',background:L.muted,opacity:0.4 }} />
+                      <span style={{ fontSize:9, color:L.muted }}>{r}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Chat panel */}
+              <div style={{ flex:1, display:'flex', flexDirection:'column', background:L.surface }}>
+                {/* Chat header */}
+                <div style={{ borderBottom:`1px solid ${L.border}`, padding:'8px 12px', display:'flex', alignItems:'center', gap:6 }}>
+                  <div style={{ width:17,height:17,borderRadius:4,background:'rgba(99,102,241,0.14)',border:'1px solid rgba(99,102,241,0.22)',display:'flex',alignItems:'center',justifyContent:'center' }}>
+                    <SparkleIco />
+                  </div>
+                  <span style={{ fontSize:10, fontWeight:600, color:L.text }}>Ask</span>
+                  <span style={{ fontSize:10, color:L.muted }}>/ next.js</span>
+                </div>
+
+                {/* Messages */}
+                <div style={{ flex:1, padding:'10px 12px', display:'flex', flexDirection:'column', gap:10, overflow:'hidden' }}>
+                  {/* User bubble */}
+                  {cur.q && (
+                    <div style={{ display:'flex', justifyContent:'flex-end' }}>
+                      <div style={{ maxWidth:'80%', padding:'7px 10px', borderRadius:8, borderTopRightRadius:2,
+                        background:'rgba(99,102,241,0.1)', border:'1px solid rgba(99,102,241,0.16)',
+                        animation: 'fadeInUp 0.3s ease' }}>
+                        <p style={{ fontSize:10, color:L.text, margin:0, lineHeight:1.4 }}>{cur.q}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* AI area */}
+                  {cur.phase === 'typing' && (
+                    <div style={{ display:'flex', gap:7, alignItems:'flex-start' }}>
+                      <div style={{ width:18,height:18,borderRadius:4,background:'rgba(99,102,241,0.14)',border:'1px solid rgba(99,102,241,0.22)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
+                        <SparkleIco />
+                      </div>
+                      <div style={{ display:'flex', gap:4, paddingTop:5 }}>
+                        {[0,1,2].map(i => (
+                          <div key={i} style={{ width:5,height:5,borderRadius:'50%',background:L.accentB,
+                            animation:`dotBounce 1.2s ease-in-out infinite`,
+                            animationDelay:`${i*0.2}s` }} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {cur.phase === 'response' && cur.ans && (
+                    <div style={{ display:'flex', gap:7, alignItems:'flex-start', animation:'aiIn 0.4s ease' }}>
+                      <div style={{ width:18,height:18,borderRadius:4,background:'rgba(99,102,241,0.14)',border:'1px solid rgba(99,102,241,0.22)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
+                        <SparkleIco />
+                      </div>
+                      <div style={{ flex:1 }}>
+                        <p style={{ fontSize:10, color:L.text2, margin:'0 0 7px', lineHeight:1.55 }}>{cur.ans}</p>
+                        <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+                          {cur.files && cur.files.map(f => (
+                            <span key={f} style={{ fontFamily:'monospace', fontSize:8.5, color:L.accentB, background:'rgba(99,102,241,0.08)', padding:'2px 7px', borderRadius:3, border:`1px solid ${L.border}` }}>{f}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Input */}
+                <div style={{ borderTop:`1px solid ${L.border}`, padding:'8px 12px' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 10px', borderRadius:7, border:`1px solid ${L.border}`, background:L.card }}>
+                    <span style={{ flex:1, fontSize:10, color:L.muted }}>Ask next.js anything…</span>
+                    <span className="cursor-blink" />
+                    <div style={{ width:22,height:22,borderRadius:5,background:L.accent,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
+                      <SendIco />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    // ── Nav ────────────────────────────────────────────────────────────────────
+    function NavBar() {
+      return (
+        <nav className="nav-glass">
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <div style={{ width:28,height:28,borderRadius:7,background:L.accent,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
+              <svg width="18" height="18" viewBox="0 0 80 80" fill="none">
+                <polyline points="30,12 12,40 30,68" stroke="white" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round"/>
+                <polyline points="50,12 68,40 50,68" stroke="white" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M40 26 L42.8 37.2 L54 40 L42.8 42.8 L40 54 L37.2 42.8 L26 40 L37.2 37.2 Z" fill="white" opacity="0.85"/>
+              </svg>
+            </div>
+            <span style={{ fontSize:14, fontWeight:700, color:L.text, letterSpacing:'-0.02em' }}>Dev Day One</span>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:28 }}>
+            {['Features','How it works'].map(l => (
+              <span key={l} style={{ fontSize:13, color:L.text2, cursor:'pointer' }}>{l}</span>
+            ))}
+            <span style={{ width:1, height:16, background:L.border, display:'inline-block' }} />
+            <span style={{ fontSize:13, color:L.text2, cursor:'pointer' }}>Sign in</span>
+            <button className="cta-btn" style={{ fontSize:12, padding:'7px 18px' }}>
+              Get early access <Arr />
+            </button>
+          </div>
+        </nav>
+      )
+    }
+
+    // ── Hero ──────────────────────────────────────────────────────────────────
+    function HeroSection() {
+      return (
+        <section style={{ position:'relative', minHeight:'100vh', display:'flex', alignItems:'center', paddingTop:52, overflow:'hidden' }}>
+          <BgLayers />
+          <FloatingChips />
+
+          <div style={{ position:'relative', zIndex:1, maxWidth:1160, margin:'0 auto', padding:'60px 48px',
+            display:'grid', gridTemplateColumns:'1fr auto', gap:64, alignItems:'center', width:'100%' }}>
+            {/* Left */}
+            <div>
+              <h1 style={{ fontSize:64, fontWeight:900, lineHeight:1.0, letterSpacing:'-0.04em', color:L.text, margin:'0 0 24px' }}>
+                Your codebase,<br />
+                <span style={{ color:L.accentB }}>finally legible.</span>
+              </h1>
+              <p style={{ fontSize:16, lineHeight:1.72, color:L.text2, margin:'0 0 40px', maxWidth:420 }}>
+                Connect a GitHub repo and let AI answer the questions your docs never covered — so engineers ship on day one, not week four.
+              </p>
+              <div style={{ display:'flex', gap:12, alignItems:'center', marginBottom:44 }}>
+                <button className="cta-btn">Connect a repo <Arr /></button>
+                <button className="ghost-btn" style={{ whiteSpace:'nowrap' }}>See how it works</button>
+              </div>
+              {/* Floating repo context chips */}
+              <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                {['acme/backend','vercel/next.js','stripe/stripe-node'].map(r => (
+                  <span key={r} style={{ fontFamily:'monospace', fontSize:10, color:L.muted,
+                    background:'rgba(13,21,38,0.8)', border:`1px solid ${L.border}`,
+                    padding:'4px 10px', borderRadius:20 }}>{r}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Right — Animated product UI */}
+            <div>
+              <ProductUI />
+            </div>
+          </div>
+        </section>
+      )
+    }
+
+    // ── Features ──────────────────────────────────────────────────────────────
+    const FEAT = [
+      { n:'01', title:'Ask the codebase',      desc:'Where is auth handled? How does payment flow? Get cited, code-grounded answers instead of hunting through files.' },
+      { n:'02', title:'Onboard new engineers', desc:'Auto-generate a first-week guide from your actual code — not a wiki someone last touched in 2022.'               },
+      { n:'03', title:'Map your architecture', desc:'Understand module boundaries, dependency chains, and code ownership across the entire repo at a glance.'          },
+      { n:'04', title:'Analyze change impact', desc:'Know which files break, which paths shift, and what to test before you merge — not after.'                       },
+    ]
+    function FeaturesSection() {
+      return (
+        <section className="section-feat" id="features">
+          <div style={{ maxWidth:1060, margin:'0 auto', padding:'0 48px', display:'grid', gridTemplateColumns:'300px 1fr', gap:96, alignItems:'flex-start' }}>
+            <div style={{ position:'sticky', top:80 }}>
+              <p style={{ fontFamily:'monospace', fontSize:10, color:L.muted, textTransform:'uppercase', letterSpacing:'0.12em', margin:'0 0 16px' }}>Capabilities</p>
+              <h2 style={{ fontSize:42, fontWeight:900, letterSpacing:'-0.03em', color:L.text, lineHeight:1.04, margin:'0 0 20px' }}>
+                Built for<br />engineers.
+              </h2>
+              <p style={{ fontSize:14, color:L.text2, lineHeight:1.7, margin:0, maxWidth:240 }}>
+                Not another doc generator. A live AI layer over your actual source of truth.
+              </p>
+            </div>
+            <div>
+              {FEAT.map(f => (
+                <div key={f.n} className="feat-row">
+                  <span style={{ fontFamily:'monospace', fontSize:11, color:L.muted, paddingTop:2 }}>{f.n}</span>
+                  <div>
+                    <h3 style={{ fontSize:17, fontWeight:700, color:L.text, margin:'0 0 9px', letterSpacing:'-0.015em' }}>{f.title}</h3>
+                    <p style={{ fontSize:14, color:L.text2, lineHeight:1.7, margin:0 }}>{f.desc}</p>
+                  </div>
+                </div>
+              ))}
+              <div style={{ height:1, background:'rgba(120,140,200,0.08)' }} />
+            </div>
+          </div>
+        </section>
+      )
+    }
+
+    // ── How it works ──────────────────────────────────────────────────────────
+    const STEPS = [
+      ['Connect', 'Paste any GitHub URL — public or private. No YAML, no config files. That\'s the whole setup.'],
+      ['Index',   'We chunk and embed the entire repo using pgvector. Done in under 60 seconds.'],
+      ['Ask',     'Your team gets instant, source-cited answers directly from the code — not the docs.'],
+    ]
+    function HowSection() {
+      return (
+        <section className="section-hiw" id="how">
+          <div style={{ maxWidth:1060, margin:'0 auto', padding:'0 48px', display:'grid', gridTemplateColumns:'300px 1fr', gap:96, alignItems:'flex-start' }}>
+            <div>
+              <p style={{ fontFamily:'monospace', fontSize:10, color:L.muted, textTransform:'uppercase', letterSpacing:'0.12em', margin:'0 0 16px' }}>How it works</p>
+              <h2 style={{ fontSize:42, fontWeight:900, letterSpacing:'-0.03em', color:L.text, lineHeight:1.04, margin:0 }}>
+                Live in<br />five minutes.
+              </h2>
+            </div>
+            <div>
+              {STEPS.map(([title,desc],i) => (
+                <div key={title} className="hiw-row">
+                  <span style={{ fontSize:15, fontWeight:900, color:L.accent, paddingTop:2 }}>{i+1}</span>
+                  <div>
+                    <span style={{ fontSize:16, fontWeight:700, color:L.text, letterSpacing:'-0.01em' }}>{title} </span>
+                    <span style={{ fontSize:14, color:L.text2, lineHeight:1.7 }}>{desc}</span>
+                  </div>
+                </div>
+              ))}
+              <div style={{ height:1, background:'rgba(120,140,200,0.08)' }} />
+            </div>
+          </div>
+        </section>
+      )
+    }
+
+    // ── CTA ───────────────────────────────────────────────────────────────────
+    function CTASection() {
+      return (
+        <section className="section-cta">
+          <div style={{ position:'relative', maxWidth:560, margin:'0 auto', padding:'0 24px', textAlign:'center' }}>
+            {/* Glow behind text */}
+            <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)',
+              width:480, height:280, borderRadius:'50%',
+              background:'radial-gradient(circle, rgba(99,102,241,0.09) 0%, transparent 70%)',
+              pointerEvents:'none' }} />
+            <div style={{ position:'relative' }}>
+              <h2 style={{ fontSize:52, fontWeight:900, letterSpacing:'-0.04em', color:L.text, lineHeight:1.0, margin:'0 0 18px' }}>
+                Ready when<br />your team is.
+              </h2>
+              <p style={{ fontSize:15, color:L.text2, lineHeight:1.65, margin:'0 0 36px' }}>
+                Connect your first repo for free — no credit card, no config files.
+              </p>
+              {/* Input row */}
+              <div style={{ display:'flex', borderRadius:10, overflow:'hidden', border:`1px solid rgba(120,140,200,0.2)`, background:L.surface, marginBottom:12 }}>
+                <input readOnly defaultValue="github.com/your-org/repo"
+                  style={{ flex:1, background:'transparent', border:'none', padding:'13px 18px',
+                    fontFamily:'monospace', fontSize:12, color:L.text2, outline:'none' }} />
+                <button className="cta-btn" style={{ borderRadius:0, margin:0 }}>
+                  Index it <Arr />
+                </button>
+              </div>
+              <p style={{ fontSize:11, color:L.muted }}>Free for public repos. Private repos on the team plan.</p>
+            </div>
+          </div>
+        </section>
+      )
+    }
+
+    // ── Footer ────────────────────────────────────────────────────────────────
+    function Footer() {
+      return (
+        <footer style={{ background:L.surface, borderTop:`1px solid ${L.border}`, padding:'24px 48px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <div style={{ width:20,height:20,borderRadius:5,background:L.accent,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
+              <svg width="12" height="12" viewBox="0 0 80 80" fill="none">
+                <polyline points="30,12 12,40 30,68" stroke="white" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"/>
+                <polyline points="50,12 68,40 50,68" stroke="white" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M40 26 L42.8 37.2 L54 40 L42.8 42.8 L40 54 L37.2 42.8 L26 40 L37.2 37.2 Z" fill="white" opacity="0.85"/>
+              </svg>
+            </div>
+            <span style={{ fontSize:12, fontWeight:600, color:L.text }}>Dev Day One</span>
+          </div>
+          <div style={{ display:'flex', gap:24 }}>
+            {['Privacy','Terms','GitHub'].map(l => <span key={l} style={{ fontSize:12, color:L.muted, cursor:'pointer' }}>{l}</span>)}
+          </div>
+        </footer>
+      )
+    }
+
+    // ── App ───────────────────────────────────────────────────────────────────
+    function App() {
+      return (
+        <>
+          <NavBar />
+          <HeroSection />
+          <FeaturesSection />
+          <HowSection />
+          <CTASection />
+          <Footer />
+        </>
+      )
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />)
+  </script>
+</body>
+</html>

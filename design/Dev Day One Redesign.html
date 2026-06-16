@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dev Day One — Redesign Exploration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #111; font-family: "Inter", -apple-system, sans-serif; }
+    button { font-family: inherit; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="components/nav-panels.jsx"></script>
+  <script type="text/babel" src="components/chat-panels.jsx"></script>
+
+  <script type="text/babel">
+    function App() {
+      return (
+        <DesignCanvas title="Dev Day One — Redesign Exploration">
+
+          <DCSection
+            id="nav"
+            title="01 · Sidebar & Navigation"
+            subtitle="Current: icon rail (44px) + context panel (168px). Proposed: unified sidebar with product branding, search, and user controls."
+          >
+            <DCArtboard id="nav-before" label="Current State" width={440} height={580}>
+              <NavBefore />
+            </DCArtboard>
+
+            <DCArtboard id="nav-safe" label="Redesign A · Safe Evolution" width={440} height={580}>
+              <NavAfterSafe />
+            </DCArtboard>
+
+            <DCArtboard id="nav-bold" label="Redesign B · Bold Direction" width={440} height={580}>
+              <NavAfterBold />
+            </DCArtboard>
+
+            <DCArtboard id="nav-notes" label="Changes" width={264} height={580}>
+              <NavNotes />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="chat"
+            title="02 · Chat Interface"
+            subtitle="Current: AI messages indistinguishable, tiny source citations, invisible toolbar. Proposed: clear AI identity, readable citations, real action buttons."
+          >
+            <DCArtboard id="chat-before" label="Current State" width={620} height={500}>
+              <ChatBefore />
+            </DCArtboard>
+
+            <DCArtboard id="chat-after" label="Redesign · Safe Evolution" width={620} height={500}>
+              <ChatAfter />
+            </DCArtboard>
+
+            <DCArtboard id="chat-notes" label="Changes" width={264} height={500}>
+              <ChatNotes />
+            </DCArtboard>
+          </DCSection>
+
+        </DesignCanvas>
+      )
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"))
+    root.render(<App />)
+  </script>
+</body>
+</html>

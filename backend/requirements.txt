@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+asyncpg
+pydantic-settings
+python-jose[cryptography]
+PyGithub
+httpx
+fastembed
+groq
+structlog
+pytest
+pytest-asyncio

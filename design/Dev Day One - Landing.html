@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dev Day One — Landing Page Redesign</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; } body { background: #111; font-family: "Inter", -apple-system, sans-serif; } button { font-family: inherit; }</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="pages/shared.jsx"></script>
+  <script type="text/babel" src="pages/landing-panels.jsx"></script>
+  <script type="text/babel">
+    function App() {
+      return (
+        <DesignCanvas title="Dev Day One — Landing Page">
+          <DCSection id="hero" title="01 · Hero" subtitle="Nav bar, headline, stats, terminal mockup. Accent switches from amber → indigo for consistency with the app.">
+            <DCArtboard id="hero-artboard" label="Hero" width={1200} height={720}>
+              <LandingHero />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="features" title="02 · Features" subtitle="2×2 card grid. Left border accent per feature colour. Hover state shows the border at full opacity.">
+            <DCArtboard id="features-artboard" label="Features" width={1100} height={560}>
+              <LandingFeatures />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="hiw" title="03 · How It Works" subtitle="Minimal text-only 3-step layout. No icon boxes, no connector lines — just numbered steps with copy.">
+            <DCArtboard id="hiw-artboard" label="How It Works" width={1100} height={380}>
+              <LandingHowItWorks />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="cta" title="04 · CTA Footer" subtitle="Centered repo URL input with inline submit. No email capture — straight to the product.">
+            <DCArtboard id="cta-artboard" label="CTA / Footer" width={1100} height={300}>
+              <LandingCTA />
+            </DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      )
+    }
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />)
+  </script>
+</body>
+</html>

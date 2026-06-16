@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dev Day One — Developer Handoff</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: #080D1A; color: #EEF0FA; font-family: 'Inter', -apple-system, sans-serif; font-size: 14px; line-height: 1.6; }
+
+    /* Layout */
+    .layout     { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+    .sidebar    { position: sticky; top: 0; height: 100vh; overflow-y: auto; background: #0B1223; border-right: 1px solid rgba(120,140,200,0.09); padding: 28px 0; }
+    .content    { padding: 56px 64px; max-width: 960px; }
+
+    /* Sidebar nav */
+    .nav-logo   { display: flex; align-items: center; gap: 10px; padding: 0 20px 24px; border-bottom: 1px solid rgba(120,140,200,0.08); margin-bottom: 20px; }
+    .nav-label  { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #4A5578; padding: 0 20px; margin-bottom: 6px; margin-top: 18px; }
+    .nav-link   { display: block; padding: 5px 20px; font-size: 12px; color: #8892B0; text-decoration: none; border-left: 2px solid transparent; transition: color 0.15s, border-color 0.15s; cursor: pointer; }
+    .nav-link:hover { color: #EEF0FA; border-left-color: rgba(99,102,241,0.4); }
+    .nav-link.active { color: #818CF8; border-left-color: #6366F1; font-weight: 600; }
+
+    /* Typography */
+    .doc-h1   { font-size: 36px; font-weight: 900; letter-spacing: -0.03em; color: #EEF0FA; margin-bottom: 8px; line-height: 1.0; }
+    .doc-h2   { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; color: #EEF0FA; margin: 56px 0 4px; padding-top: 56px; border-top: 1px solid rgba(120,140,200,0.08); line-height: 1.1; }
+    .doc-h3   { font-size: 13px; font-weight: 700; color: #EEF0FA; margin: 28px 0 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .doc-lead { font-size: 15px; color: #8892B0; line-height: 1.7; margin-bottom: 36px; }
+    .doc-meta { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: #4A5578; }
+
+    /* Divider */
+    .hr { height: 1px; background: rgba(120,140,200,0.08); margin: 32px 0; }
+
+    /* Cards / surfaces */
+    .card       { background: #0B1223; border: 1px solid rgba(120,140,200,0.09); border-radius: 10px; }
+    .card-inner { padding: 20px 24px; }
+    .surface    { background: #0F1A2E; border-radius: 8px; padding: 16px 20px; }
+
+    /* Token grid */
+    .token-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+    .token-swatch { border-radius: 8px; overflow: hidden; border: 1px solid rgba(120,140,200,0.09); }
+    .token-color  { height: 48px; }
+    .token-info   { background: #0B1223; padding: 10px 12px; }
+    .token-name   { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #8892B0; display: block; margin-bottom: 2px; }
+    .token-hex    { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #EEF0FA; font-weight: 600; }
+    .token-usage  { font-size: 10px; color: #4A5578; margin-top: 3px; }
+
+    /* Type scale */
+    .type-row     { display: flex; align-items: baseline; gap: 24px; padding: 16px 0; border-bottom: 1px solid rgba(120,140,200,0.06); }
+    .type-label   { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #4A5578; width: 100px; flex-shrink: 0; }
+    .type-sample  { color: #EEF0FA; flex: 1; }
+    .type-spec    { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #4A5578; text-align: right; flex-shrink: 0; }
+
+    /* Spacing scale */
+    .space-row    { display: flex; align-items: center; gap: 16px; margin-bottom: 10px; }
+    .space-bar    { background: rgba(99,102,241,0.25); border-radius: 2px; height: 10px; }
+    .space-info   { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #4A5578; }
+
+    /* Radius */
+    .radius-row   { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+    .radius-box   { background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); display: flex; align-items: center; justify-content: center; }
+    .radius-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #4A5578; text-align: center; margin-top: 6px; }
+
+    /* Component demos */
+    .demo-wrap    { background: #080D1A; border-radius: 10px; border: 1px solid rgba(120,140,200,0.09); padding: 24px; }
+
+    /* Code block */
+    pre { background: #0B1223; border: 1px solid rgba(120,140,200,0.09); border-radius: 8px; padding: 16px 20px; overflow-x: auto; margin: 12px 0; }
+    code { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #A5B4FC; line-height: 1.6; }
+    .co  { color: #4A5578; } /* comment */
+    .kw  { color: #818CF8; } /* keyword */
+    .st  { color: #86EFAC; } /* string */
+    .va  { color: #FCA5A5; } /* value/number */
+
+    /* Status badge */
+    .badge        { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600; white-space: nowrap; }
+
+    /* Page inventory */
+    .page-row     { display: grid; grid-template-columns: 180px 1fr 140px; gap: 16px; padding: 14px 0; border-bottom: 1px solid rgba(120,140,200,0.06); align-items: start; }
+    .page-route   { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #818CF8; }
+    .page-desc    { font-size: 12px; color: #8892B0; line-height: 1.5; }
+    .page-comp    { font-size: 10px; color: #4A5578; line-height: 1.6; }
+
+    /* Logo usage */
+    .logo-grid    { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; border-radius: 10px; overflow: hidden; background: rgba(120,140,200,0.06); }
+    .logo-cell    { padding: 28px; display: flex; align-items: center; gap: 14px; }
+    .logo-bg-dark { background: #080D1A; }
+    .logo-bg-light{ background: #F1F5F9; }
+
+    /* Sidebar preview */
+    .sidebar-preview { display: flex; height: 380px; border-radius: 10px; overflow: hidden; border: 1px solid rgba(120,140,200,0.09); }
+    .sp-rail { width: 220px; background: #0B1223; border-right: 1px solid rgba(120,140,200,0.09); flex-shrink: 0; display: flex; flex-direction: column; }
+    .sp-content { flex: 1; background: #080D1A; display: flex; flex-direction: column; }
+
+    @media print {
+      .sidebar { display: none; }
+      .layout  { grid-template-columns: 1fr; }
+      .content { padding: 32px; }
+      .doc-h2  { page-break-before: always; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ── Sidebar nav ──────────────────────────────────────────────────────── -->
+  <nav class="sidebar">
+    <div class="nav-logo">
+      <div style="width:26px;height:26px;border-radius:7px;background:#6366F1;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="16" height="16" viewBox="0 0 80 80" fill="none">
+          <polyline points="30,12 12,40 30,68" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="50,12 68,40 50,68" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M40 26 L42.8 37.2 L54 40 L42.8 42.8 L40 54 L37.2 42.8 L26 40 L37.2 37.2 Z" fill="white" opacity="0.85"/>
+        </svg>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#EEF0FA;">Dev Day One</div>
+        <div style="font-size:9px;color:#4A5578;">Developer Handoff v1.0</div>
+      </div>
+    </div>
+
+    <div class="nav-label">Foundation</div>
+    <a class="nav-link" href="#colors">Colors</a>
+    <a class="nav-link" href="#typography">Typography</a>
+    <a class="nav-link" href="#spacing">Spacing & Radius</a>
+    <a class="nav-link" href="#logo">Logo</a>
+
+    <div class="nav-label">Components</div>
+    <a class="nav-link" href="#sidebar">Sidebar</a>
+    <a class="nav-link" href="#pageheader">Page Header</a>
+    <a class="nav-link" href="#buttons">Buttons</a>
+    <a class="nav-link" href="#badges">Status Badges</a>
+    <a class="nav-link" href="#chat">Chat Interface</a>
+    <a class="nav-link" href="#cards">Cards</a>
+
+    <div class="nav-label">Pages</div>
+    <a class="nav-link" href="#landing">Landing</a>
+    <a class="nav-link" href="#app-pages">App Pages</a>
+
+    <div class="nav-label">Notes</div>
+    <a class="nav-link" href="#impl">Implementation</a>
+  </nav>
+
+  <!-- ── Main content ─────────────────────────────────────────────────────── -->
+  <main class="content">
+
+    <!-- Header -->
+    <p class="doc-meta" style="margin-bottom:12px;">Dev Day One · Design Handoff · June 2026</p>
+    <h1 class="doc-h1">Developer Handoff</h1>
+    <p class="doc-lead">Tokens, components, and page specs for the full redesign. Direction A (Safe Evolution) — dark navy base, indigo accent, unified sidebar.</p>
+
+    <div class="card">
+      <div class="card-inner" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;">
+        <div style="padding-right:24px;border-right:1px solid rgba(120,140,200,0.08);">
+          <div class="doc-meta" style="margin-bottom:4px;">Design direction</div>
+          <div style="font-size:13px;font-weight:600;color:#EEF0FA;">Safe Evolution / A</div>
+        </div>
+        <div style="padding:0 24px;border-right:1px solid rgba(120,140,200,0.08);">
+          <div class="doc-meta" style="margin-bottom:4px;">Accent colour</div>
+          <div style="font-size:13px;font-weight:600;color:#818CF8;">#6366F1 Indigo</div>
+        </div>
+        <div style="padding-left:24px;">
+          <div class="doc-meta" style="margin-bottom:4px;">Base palette</div>
+          <div style="font-size:13px;font-weight:600;color:#EEF0FA;">Navy · not black</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 01 Colors ─────────────────────────────────────────────────────── -->
+    <h2 class="doc-h2" id="colors">01 · Colors</h2>
+    <p class="doc-lead">All backgrounds use a navy-blue base rather than near-black. This gives visible depth between layers without requiring heavy shadows.</p>
+
+    <h3 class="doc-h3">Backgrounds</h3>
+    <div class="token-grid">
+      <div class="token-swatch">
+        <div class="token-color" style="background:#080D1A;border-bottom:1px solid rgba(120,140,200,0.09);"></div>
+        <div class="token-info">
+          <span class="token-name">--bg-base</span>
+          <span class="token-hex">#080D1A</span>
+          <div class="token-usage">Main canvas bg</div>
+        </div>
+      </div>
+      <div class="token-swatch">
+        <div class="token-color" style="background:#0B1223;"></div>
+        <div class="token-info">
+          <span class="token-name">--bg-sidebar</span>
+          <span class="token-hex">#0B1223</span>
+          <div class="token-usage">Sidebar, panels</div>
+        </div>
+      </div>
+      <div class="token-swatch">
+        <div class="token-color" style="background:#0F1A2E;"></div>
+        <div class="token-info">
+          <span class="token-name">--bg-surface</span>
+          <span class="token-hex">#0F1A2E</span>
+          <div class="token-usage">Input fields, code blocks</div>
+        </div>
+      </div>
+      <div class="token-swatch">
+        <div class="token-color" style="background:#13202F;"></div>
+        <div class="token-info">
+          <span class="token-name">--bg-card</span>
+          <span class="token-hex">#13202F</span>
+          <div class="token-usage">Cards, dropdowns</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="doc-h3">Accent</h3>
+    <div class="token-grid">
+      <div class="token-swatch">
+        <div class="token-color" style="background:#6366F1;"></div>
+        <div class="token-info">
+          <span class="token-name">--accent</span>
+          <span class="token-hex">#6366F1</span>
+          <div class="token-usage">Primary CTA, active states, logo bg</div>
+        </div>
+      </div>
+      <div class="token-swatch">
+        <div class="token-color" style="background:#818CF8;"></div>
+        <div class="token-info">
+          <span class="token-name">--accent-light</span>
+          <span class="token-hex">#818CF8</span>
+          <div class="token-usage">Active nav text, code spans</div>
+        </div>
+      </div>
+      <div class="token-swatch">
+        <div class="token-color" style="background:rgba(99,102,241,0.10);border:1px solid rgba(120,140,200,0.09);"></div>
+        <div class="token-info">
+          <span class="token-name">--accent-dim</span>
+          <span class="token-hex">rgba(99,102,241, 0.10)</span>
+          <div class="token-usage">Active bg, user bubbles</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="doc-h3">Semantic</h3>
+    <div class="token-grid">
+      <div class="token-swatch">
+        <div class="token-color" style="background:#10B981;"></div>
+        <div class="token-info">
+          <span class="token-name">--success</span>
+          <span class="token-hex">#10B981</span>
+          <div class="token-usage">Indexed repos, low risk, accepted ADRs</div>
+        </div>
+      </div>
+      <div class="token-swatch">
+        <div class="token-color" style="background:#F59E0B;"></div>
+        <div class="token-info">
+          <span class="token-name">--warning</span>
+          <span class="token-hex">#F59E0B</span>
+          <div class="token-usage">Idle/not-indexed, medium risk</div>
+        </div>
+      </div>
+      <div class="token-swatch">
+        <div class="token-color" style="background:#EF4444;"></div>
+        <div class="token-info">
+          <span class="token-name">--danger</span>
+          <span class="token-hex">#EF4444</span>
+          <div class="token-usage">High risk, destructive actions</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="doc-h3">Text</h3>
+    <div class="token-grid">
+      <div class="token-swatch">
+        <div class="token-color" style="background:#EEF0FA;"></div>
+        <div class="token-info">
+          <span class="token-name">--text-primary</span>
+          <span class="token-hex">#EEF0FA</span>
+          <div class="token-usage">Headings, primary labels</div>
+        </div>
+      </div>
+      <div class="token-swatch">
+        <div class="token-color" style="background:#8892B0;"></div>
+        <div class="token-info">
+          <span class="token-name">--text-secondary</span>
+          <span class="token-hex">#8892B0</span>
+          <div class="token-usage">Body copy, descriptions</div>
+        </div>
+      </div>
+      <div class="token-swatch">
+        <div class="token-color" style="background:#4A5578;"></div>
+        <div class="token-info">
+          <span class="token-name">--text-muted</span>
+          <span class="token-hex">#4A5578</span>
+          <div class="token-usage">Timestamps, labels, placeholders</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="doc-h3">Borders</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="surface" style="border:1px solid rgba(120,140,200,0.09);">
+        <code style="font-size:11px;">rgba(120,140,200, 0.09)</code>
+        <div class="token-usage" style="margin-top:4px;">--border — default separator</div>
+      </div>
+      <div class="surface" style="border:1px solid rgba(120,140,200,0.18);">
+        <code style="font-size:11px;">rgba(120,140,200, 0.18)</code>
+        <div class="token-usage" style="margin-top:4px;">--border-strong — inputs, CTAs</div>
+      </div>
+    </div>
+
+    <!-- ── 02 Typography ──────────────────────────────────────────────────── -->
+    <h2 class="doc-h2" id="typography">02 · Typography</h2>
+    <p class="doc-lead">Two typefaces: <strong>Inter</strong> for all UI text, <strong>JetBrains Mono</strong> for code, routes, and metadata labels.</p>
+
+    <div class="card">
+      <div class="type-row" style="padding-top:0;">
+        <div class="type-label">page-title</div>
+        <div class="type-sample" style="font-size:32px;font-weight:900;letter-spacing:-0.03em;line-height:1;">Page Title</div>
+        <div class="type-spec">32 / 900 / -0.03em</div>
+      </div>
+      <div class="type-row">
+        <div class="type-label">section-head</div>
+        <div class="type-sample" style="font-size:18px;font-weight:800;letter-spacing:-0.02em;">Section Heading</div>
+        <div class="type-spec">18 / 800 / -0.02em</div>
+      </div>
+      <div class="type-row">
+        <div class="type-label">card-title</div>
+        <div class="type-sample" style="font-size:13px;font-weight:600;color:#EEF0FA;">Card Title</div>
+        <div class="type-spec">13 / 600</div>
+      </div>
+      <div class="type-row">
+        <div class="type-label">body</div>
+        <div class="type-sample" style="font-size:13px;color:#8892B0;line-height:1.65;">Body copy for descriptions and AI answers</div>
+        <div class="type-spec">13 / 400 / 1.65</div>
+      </div>
+      <div class="type-row">
+        <div class="type-label">label-upper</div>
+        <div class="type-sample" style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#4A5578;">SECTION LABEL</div>
+        <div class="type-spec">9 / 700 / 0.1em UC</div>
+      </div>
+      <div class="type-row">
+        <div class="type-label">mono-path</div>
+        <div class="type-sample" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#818CF8;">lib/supabase/client.ts</div>
+        <div class="type-spec">Mono 11 / 400</div>
+      </div>
+      <div class="type-row" style="border-bottom:none;">
+        <div class="type-label">mono-meta</div>
+        <div class="type-sample" style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#4A5578;">indexed Jun 12, 2025</div>
+        <div class="type-spec">Mono 9 / 400</div>
+      </div>
+    </div>
+
+    <!-- ── 03 Spacing & Radius ────────────────────────────────────────────── -->
+    <h2 class="doc-h2" id="spacing">03 · Spacing &amp; Radius</h2>
+
+    <h3 class="doc-h3">Spacing scale (base 4px)</h3>
+    <div class="card card-inner">
+      <div class="space-row"><div class="space-bar" style="width:4px;"></div><span class="space-info">4px — icon gap, inline padding</span></div>
+      <div class="space-row"><div class="space-bar" style="width:8px;"></div><span class="space-info">8px — item gap, compact rows</span></div>
+      <div class="space-row"><div class="space-bar" style="width:12px;"></div><span class="space-info">12px — sidebar padding-x</span></div>
+      <div class="space-row"><div class="space-bar" style="width:16px;"></div><span class="space-info">16px — card padding, chat padding</span></div>
+      <div class="space-row"><div class="space-bar" style="width:24px;"></div><span class="space-info">24px — page padding-x (app)</span></div>
+      <div class="space-row"><div class="space-bar" style="width:48px;"></div><span class="space-info">48px — section gap, page padding-x (landing)</span></div>
+      <div class="space-row"><div class="space-bar" style="width:64px;"></div><span class="space-info">64px — section vertical gap</span></div>
+    </div>
+
+    <h3 class="doc-h3">Border radius</h3>
+    <div class="radius-row" style="margin-top:8px;">
+      <div>
+        <div class="radius-box" style="width:28px;height:28px;border-radius:4px;"></div>
+        <div class="radius-label">4px<br/>badges</div>
+      </div>
+      <div>
+        <div class="radius-box" style="width:36px;height:36px;border-radius:6px;"></div>
+        <div class="radius-label">6px<br/>buttons</div>
+      </div>
+      <div>
+        <div class="radius-box" style="width:44px;height:44px;border-radius:7px;"></div>
+        <div class="radius-label">7px<br/>logo, inputs</div>
+      </div>
+      <div>
+        <div class="radius-box" style="width:52px;height:52px;border-radius:8px;"></div>
+        <div class="radius-label">8px<br/>CTAs, CTA rows</div>
+      </div>
+      <div>
+        <div class="radius-box" style="width:60px;height:60px;border-radius:10px;"></div>
+        <div class="radius-label">10px<br/>cards, panels</div>
+      </div>
+      <div>
+        <div class="radius-box" style="width:68px;height:68px;border-radius:14px;"></div>
+        <div class="radius-label">14px<br/>chat bubbles</div>
+      </div>
+      <div>
+        <div class="radius-box" style="width:36px;height:36px;border-radius:999px;"></div>
+        <div class="radius-label">999px<br/>pills, chips</div>
+      </div>
+    </div>
+
+    <!-- ── 04 Logo ────────────────────────────────────────────────────────── -->
+    <h2 class="doc-h2" id="logo">04 · Logo — Mark B (Code · AI)</h2>
+    <p class="doc-lead">Angle brackets <code style="font-family:monospace;font-size:12px;background:rgba(99,102,241,0.1);padding:1px 5px;border-radius:3px;color:#A5B4FC;">&lt; &gt;</code> with a 4-point sparkle centre. Communicates both "code" and "AI" in one glyph. Scales from 80px hero down to 16px favicon.</p>
+
+    <div class="logo-grid">
+      <div class="logo-cell logo-bg-dark">
+        <svg width="52" height="52" viewBox="0 0 80 80" fill="none">
+          <polyline points="30,12 12,40 30,68" stroke="#6366F1" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="50,12 68,40 50,68" stroke="#6366F1" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M40 26 L42.8 37.2 L54 40 L42.8 42.8 L40 54 L37.2 42.8 L26 40 L37.2 37.2 Z" fill="#A5B4FC"/>
+        </svg>
+        <div>
+          <div style="font-size:17px;font-weight:800;letter-spacing:-0.025em;color:#EEF0FA;">Dev Day One</div>
+          <div style="font-size:10px;color:#4A5578;margin-top:3px;">Repository Intelligence</div>
+        </div>
+      </div>
+      <div class="logo-cell logo-bg-light">
+        <svg width="52" height="52" viewBox="0 0 80 80" fill="none">
+          <polyline points="30,12 12,40 30,68" stroke="#6366F1" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="50,12 68,40 50,68" stroke="#6366F1" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M40 26 L42.8 37.2 L54 40 L42.8 42.8 L40 54 L37.2 42.8 L26 40 L37.2 37.2 Z" fill="#6366F1"/>
+        </svg>
+        <div>
+          <div style="font-size:17px;font-weight:800;letter-spacing:-0.025em;color:#0F172A;">Dev Day One</div>
+          <div style="font-size:10px;color:#64748B;margin-top:3px;">Repository Intelligence</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="doc-h3" style="margin-top:24px;">Scale usage rules</h3>
+    <div class="card">
+      <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:0;">
+        <div style="padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:9px;color:#4A5578;font-weight:700;border-bottom:1px solid rgba(120,140,200,0.08);">SIZE</div>
+        <div style="padding:10px 14px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#4A5578;border-bottom:1px solid rgba(120,140,200,0.08);">USAGE</div>
+        <div style="padding:10px 14px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#4A5578;border-bottom:1px solid rgba(120,140,200,0.08);">TREATMENT</div>
+        <div style="padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#818CF8;border-bottom:1px solid rgba(120,140,200,0.06);">≥ 48px</div>
+        <div style="padding:10px 14px;font-size:11px;color:#8892B0;border-bottom:1px solid rgba(120,140,200,0.06);">Landing hero, marketing</div>
+        <div style="padding:10px 14px;font-size:11px;color:#8892B0;border-bottom:1px solid rgba(120,140,200,0.06);">Bare mark, indigo strokes</div>
+        <div style="padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#818CF8;border-bottom:1px solid rgba(120,140,200,0.06);">28px</div>
+        <div style="padding:10px 14px;font-size:11px;color:#8892B0;border-bottom:1px solid rgba(120,140,200,0.06);">App sidebar lockup</div>
+        <div style="padding:10px 14px;font-size:11px;color:#8892B0;border-bottom:1px solid rgba(120,140,200,0.06);">White mark on indigo badge (7px radius)</div>
+        <div style="padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#818CF8;border-bottom:1px solid rgba(120,140,200,0.06);">20px</div>
+        <div style="padding:10px 14px;font-size:11px;color:#8892B0;border-bottom:1px solid rgba(120,140,200,0.06);">Landing nav, mini sidebar</div>
+        <div style="padding:10px 14px;font-size:11px;color:#8892B0;border-bottom:1px solid rgba(120,140,200,0.06);">White mark on indigo badge (5px radius)</div>
+        <div style="padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#818CF8;">16px</div>
+        <div style="padding:10px 14px;font-size:11px;color:#8892B0;">Browser tab favicon</div>
+        <div style="padding:10px 14px;font-size:11px;color:#8892B0;">White mark on indigo badge (3px radius)</div>
+      </div>
+    </div>
+
+    <h3 class="doc-h3">SVG source</h3>
+    <pre><code><span class="co">&lt;!-- Mark B — Code·AI (bare, for ≥ 48px) --&gt;</span>
+&lt;svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg"&gt;
+  &lt;polyline points="30,12 12,40 30,68" stroke="#6366F1" stroke-width="5"
+    stroke-linecap="round" stroke-linejoin="round"/&gt;
+  &lt;polyline points="50,12 68,40 50,68" stroke="#6366F1" stroke-width="5"
+    stroke-linecap="round" stroke-linejoin="round"/&gt;
+  &lt;path d="M40 26 L42.8 37.2 L54 40 L42.8 42.8 L40 54 L37.2 42.8 L26 40 L37.2 37.2 Z"
+    fill="#A5B4FC"/&gt;<span class="co"> &lt;!-- use #6366F1 on light backgrounds --&gt;</span>
+&lt;/svg&gt;
+
+<span class="co">&lt;!-- Badge version (sidebar / favicon) --&gt;</span>
+&lt;div style="width:28px;height:28px;border-radius:7px;background:#6366F1;"&gt;
+  &lt;svg viewBox="0 0 80 80" fill="none"&gt;
+    &lt;polyline points="30,12 12,40 30,68" stroke="white" stroke-width="8"
+      stroke-linecap="round" stroke-linejoin="round"/&gt;
+    &lt;polyline points="50,12 68,40 50,68" stroke="white" stroke-width="8"
+      stroke-linecap="round" stroke-linejoin="round"/&gt;
+    &lt;path d="M40 26 L42.8 37.2 L54 40 L42.8 42.8 L40 54 L37.2 42.8 L26 40 L37.2 37.2 Z"
+      fill="white" opacity="0.85"/&gt;
+  &lt;/svg&gt;
+&lt;/div&gt;</code></pre>
+
+    <!-- ── 05 Sidebar ─────────────────────────────────────────────────────── -->
+    <h2 class="doc-h2" id="sidebar">05 · Sidebar (AppSidebar)</h2>
+    <p class="doc-lead">220px fixed-width sidebar replaces the original 44px icon rail + 168px context panel. Contains logo, repo search, repo list with sub-pages, and a footer with Settings + user.</p>
+
+    <div class="sidebar-preview">
+      <div class="sp-rail">
+        <!-- Logo -->
+        <div style="display:flex;align-items:center;gap:10px;padding:16px 16px 14px;border-bottom:1px solid rgba(120,140,200,0.09);">
+          <div style="width:26px;height:26px;border-radius:7px;background:#6366F1;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="16" height="16" viewBox="0 0 80 80" fill="none">
+              <polyline points="30,12 12,40 30,68" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="50,12 68,40 50,68" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M40 26 L42.8 37.2 L54 40 L42.8 42.8 L40 54 L37.2 42.8 L26 40 L37.2 37.2 Z" fill="white" opacity="0.85"/>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#EEF0FA;line-height:1.1;">Dev Day One</div>
+            <div style="font-size:9px;color:#4A5578;margin-top:2px;">Repository Intelligence</div>
+          </div>
+        </div>
+        <!-- Search -->
+        <div style="padding:10px 12px 6px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;background:#0F1A2E;border:1px solid rgba(120,140,200,0.09);">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#4A5578" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span style="font-size:11px;color:#4A5578;">Filter repos…</span>
+          </div>
+        </div>
+        <!-- Label -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px 4px;">
+          <span style="font-size:9px;font-weight:700;color:#4A5578;text-transform:uppercase;letter-spacing:0.08em;">Repositories</span>
+          <span style="font-size:16px;color:#4A5578;line-height:1;">+</span>
+        </div>
+        <!-- Active repo -->
+        <div style="padding:0 8px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;background:#13202F;border:1px solid rgba(99,102,241,0.2);">
+            <div style="width:6px;height:6px;border-radius:50%;background:#10B981;flex-shrink:0;"></div>
+            <span style="flex:1;font-size:11px;font-weight:600;color:#EEF0FA;">next.js</span>
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#4A5578" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div style="margin-left:6px;margin-top:2px;padding-left:10px;border-left:1px solid rgba(255,255,255,0.05);">
+            <div style="padding:4px 10px;border-radius:5px;font-size:11px;color:#8892B0;">Overview</div>
+            <div style="padding:4px 10px;border-radius:5px;font-size:11px;color:#818CF8;background:rgba(99,102,241,0.10);border-left:2px solid #6366F1;font-weight:600;">Ask</div>
+            <div style="padding:4px 10px;border-radius:5px;font-size:11px;color:#8892B0;">Onboard</div>
+            <div style="padding:4px 10px;border-radius:5px;font-size:11px;color:#8892B0;">Architecture</div>
+            <div style="padding:4px 10px;border-radius:5px;font-size:11px;color:#8892B0;">Patterns</div>
+          </div>
+        </div>
+        <!-- Inactive repos -->
+        <div style="padding:0 8px;margin-top:4px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;">
+            <div style="width:6px;height:6px;border-radius:50%;background:#4A5578;flex-shrink:0;opacity:0.5;"></div>
+            <span style="font-size:11px;color:#8892B0;">my-app</span>
+            <span style="font-size:9px;color:#F59E0B;margin-left:auto;font-family:monospace;">idle</span>
+          </div>
+        </div>
+        <div style="flex:1;"></div>
+        <!-- Footer -->
+        <div style="border-top:1px solid rgba(120,140,200,0.09);padding:10px 12px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;margin-bottom:2px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4A5578" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span style="font-size:11px;color:#8892B0;">Settings</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 6px;">
+            <div style="width:20px;height:20px;border-radius:50%;background:#13202F;border:1px solid rgba(120,140,200,0.09);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600;color:#8892B0;">JD</div>
+            <span style="font-size:11px;color:#8892B0;">john@dev.io</span>
+          </div>
+        </div>
+      </div>
+      <div class="sp-content">
+        <div style="padding:20px 24px;border-bottom:1px solid rgba(120,140,200,0.09);">
+          <div style="font-size:18px;font-weight:800;letter-spacing:-0.02em;color:#EEF0FA;margin-bottom:4px;">Ask</div>
+          <div style="font-size:9px;font-family:'JetBrains Mono',monospace;color:#4A5578;">next.js · Chat interface</div>
+          <div style="height:1px;margin-top:16px;background:rgba(120,140,200,0.09);position:relative;">
+            <div style="position:absolute;left:0;top:0;width:32px;height:1px;background:#6366F1;"></div>
+          </div>
+        </div>
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(120,140,200,0.1);">content area</span>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="doc-h3">Anatomy</h3>
+    <div class="card card-inner" style="font-size:12px;line-height:1.9;color:#8892B0;">
+      <div><span style="font-family:monospace;color:#818CF8;">Logo lockup</span> — 28×28 indigo badge (7px radius) + "Dev Day One" (12/700) + "Repository Intelligence" (9/400 muted)</div>
+      <div><span style="font-family:monospace;color:#818CF8;">Filter input</span> — background: --bg-surface · border: --border · radius: 7px · height: 32px</div>
+      <div><span style="font-family:monospace;color:#818CF8;">Section label</span> — 9px / 700 / uppercase / 0.08em tracking / --text-muted</div>
+      <div><span style="font-family:monospace;color:#818CF8;">Repo row</span> — 6px dot (green=indexed, muted=idle) · 11px name · idle badge in amber mono</div>
+      <div><span style="font-family:monospace;color:#818CF8;">Sub-page item</span> — active: --accent-dim bg · left border 2px --accent · 11/600 --accent-light</div>
+      <div><span style="font-family:monospace;color:#818CF8;">Footer</span> — Settings icon-row · 20px avatar circle · user email 11/400</div>
+    </div>
+
+    <!-- ── 06 Page Header ──────────────────────────────────────────────────── -->
+    <h2 class="doc-h2" id="pageheader">06 · Page Header</h2>
+    <p class="doc-lead">Every content page opens with a page header: large bold title, optional mono meta string, optional action button. A 1px border with a short indigo accent cap closes the header zone.</p>
+
+    <div class="demo-wrap">
+      <div style="padding:20px 24px 0;">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:16px;">
+          <div>
+            <h1 style="font-size:18px;font-weight:800;color:#EEF0FA;letter-spacing:-0.02em;line-height:1;">Architecture</h1>
+            <p style="font-size:9px;color:#4A5578;font-family:'JetBrains Mono',monospace;margin-top:4px;">AI-generated · Jun 12, 2025</p>
+          </div>
+          <button style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:7px;background:#6366F1;border:none;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">Regenerate</button>
+        </div>
+        <div style="height:1px;background:rgba(120,140,200,0.09);position:relative;">
+          <div style="position:absolute;left:0;top:0;width:32px;height:1px;background:#6366F1;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 07 Buttons ─────────────────────────────────────────────────────── -->
+    <h2 class="doc-h2" id="buttons">07 · Buttons</h2>
+    <div class="demo-wrap" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <button style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:7px;background:#6366F1;border:none;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">Primary Action</button>
+      <button style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:7px;background:transparent;border:1px solid rgba(120,140,200,0.18);color:#8892B0;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">Ghost Action</button>
+      <button style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;background:#6366F1;border:none;color:#fff;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;">Small Primary</button>
+      <button style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;background:transparent;border:1px solid rgba(239,68,68,0.2);color:#EF4444;font-size:10px;cursor:pointer;font-family:inherit;">Danger</button>
+    </div>
+    <pre><code><span class="co">/* Primary */</span>
+background: <span class="va">#6366F1</span>; border: none; color: white;
+padding: <span class="va">6px 14px</span>; border-radius: <span class="va">7px</span>; font-size: <span class="va">11px</span>; font-weight: <span class="va">600</span>;
+
+<span class="co">/* Ghost */</span>
+background: transparent; border: 1px solid rgba(120,140,200,0.18);
+color: <span class="va">#8892B0</span>;
+
+<span class="co">/* Small (page-header actions) */</span>
+padding: <span class="va">4px 10px</span>; border-radius: <span class="va">6px</span>; font-size: <span class="va">10px</span>;</code></pre>
+
+    <!-- ── 08 Status Badges ───────────────────────────────────────────────── -->
+    <h2 class="doc-h2" id="badges">08 · Status Badges</h2>
+    <p class="doc-lead">Monospace pill badges used across repos, ADRs, APIs, and impact analysis. Always a 4px radius, 1px border, semi-transparent fill.</p>
+
+    <div class="demo-wrap" style="display:flex;gap:8px;flex-wrap:wrap;">
+      <span class="badge" style="background:rgba(16,185,129,0.10);border:1px solid rgba(16,185,129,0.25);color:#10B981;">indexed</span>
+      <span class="badge" style="background:rgba(82,82,106,0.10);border:1px solid rgba(82,82,106,0.25);color:#8892B0;">not indexed</span>
+      <span class="badge" style="background:rgba(239,68,68,0.10);border:1px solid rgba(239,68,68,0.25);color:#EF4444;">high</span>
+      <span class="badge" style="background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.25);color:#F59E0B;">medium</span>
+      <span class="badge" style="background:rgba(16,185,129,0.10);border:1px solid rgba(16,185,129,0.25);color:#10B981;">low</span>
+      <span class="badge" style="background:rgba(16,185,129,0.10);border:1px solid rgba(16,185,129,0.25);color:#10B981;">accepted</span>
+      <span class="badge" style="background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.25);color:#F59E0B;">proposed</span>
+      <span class="badge" style="background:rgba(239,68,68,0.10);border:1px solid rgba(239,68,68,0.25);color:#EF4444;">deprecated</span>
+      <span class="badge" style="background:rgba(99,102,241,0.10);border:1px solid rgba(99,102,241,0.25);color:#818CF8;">internal</span>
+      <span class="badge" style="background:rgba(139,92,246,0.10);border:1px solid rgba(139,92,246,0.25);color:#8B5CF6;">external</span>
+      <span class="badge" style="background:rgba(16,185,129,0.10);border:1px solid rgba(16,185,129,0.25);color:#10B981;">active</span>
+    </div>
+    <pre><code><span class="co">/* StatusBadge pattern */</span>
+<span class="kw">const</span> BADGE = {
+  indexed:    { bg: <span class="st">'rgba(16,185,129,0.10)'</span>,  color: <span class="st">'#10B981'</span>, border: <span class="st">'rgba(16,185,129,0.25)'</span>  },
+  high:       { bg: <span class="st">'rgba(239,68,68,0.10)'</span>,   color: <span class="st">'#EF4444'</span>, border: <span class="st">'rgba(239,68,68,0.25)'</span>   },
+  medium:     { bg: <span class="st">'rgba(245,158,11,0.10)'</span>,  color: <span class="st">'#F59E0B'</span>, border: <span class="st">'rgba(245,158,11,0.25)'</span>  },
+  accepted:   { bg: <span class="st">'rgba(16,185,129,0.10)'</span>,  color: <span class="st">'#10B981'</span>, border: <span class="st">'rgba(16,185,129,0.25)'</span>  },
+  proposed:   { bg: <span class="st">'rgba(245,158,11,0.10)'</span>,  color: <span class="st">'#F59E0B'</span>, border: <span class="st">'rgba(245,158,11,0.25)'</span>  },
+  deprecated: { bg: <span class="st">'rgba(239,68,68,0.10)'</span>,   color: <span class="st">'#EF4444'</span>, border: <span class="st">'rgba(239,68,68,0.25)'</span>   },
+  internal:   { bg: <span class="st">'rgba(99,102,241,0.10)'</span>,  color: <span class="st">'#818CF8'</span>, border: <span class="st">'rgba(99,102,241,0.25)'</span>  },
+  external:   { bg: <span class="st">'rgba(139,92,246,0.10)'</span>, color: <span class="st">'#8B5CF6'</span>, border: <span class="st">'rgba(139,92,246,0.25)'</span> },
+}
+<span class="co">/* base: padding 2px 8px · border-radius 4px · font: JetBrains Mono 10 / 600 */</span></code></pre>
+
+    <!-- ── 09 Chat Interface ───────────────────────────────────────────────── -->
+    <h2 class="doc-h2" id="chat">09 · Chat Interface (Ask / Onboard)</h2>
+    <p class="doc-lead">Chat messages use clear visual identity: user bubbles are accent-tinted; AI responses carry an avatar icon. Source file chips are clearly sized and clickable.</p>
+
+    <div class="card card-inner">
+      <h3 class="doc-h3" style="margin-top:0;">Message anatomy</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;font-size:12px;color:#8892B0;line-height:1.7;">
+        <div>
+          <strong style="color:#EEF0FA;display:block;margin-bottom:6px;">User bubble</strong>
+          background: rgba(99,102,241, 0.10)<br/>
+          border: 1px solid rgba(99,102,241, 0.16)<br/>
+          border-radius: 14px / 4px (top-right)<br/>
+          padding: 10px 16px<br/>
+          font: 13px / 1.5 / --text-primary
+        </div>
+        <div>
+          <strong style="color:#EEF0FA;display:block;margin-bottom:6px;">AI response</strong>
+          Avatar: 26×26 indigo badge w/ sparkle icon<br/>
+          Text: 13px / 1.7 / --text-secondary<br/>
+          Source chips: monospace 10px, --bg-surface card<br/>
+          File icon: indigo, 9px SVG<br/>
+          gap between avatar + bubble: 12px
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-inner" style="margin-top:10px;">
+      <h3 class="doc-h3" style="margin-top:0;">Input bar</h3>
+      <div style="font-size:12px;color:#8892B0;line-height:1.8;">
+        Container: border-radius 14px · --bg-surface · border --border · padding 12px 16px<br/>
+        Send button: 30×30 · border-radius 9px · background --accent · white arrow SVG<br/>
+        Helper text row: 10px mono · --text-muted · space-between
+      </div>
+    </div>
+
+    <!-- ── 10 Cards ───────────────────────────────────────────────────────── -->
+    <h2 class="doc-h2" id="cards">10 · Cards</h2>
+    <div class="card card-inner" style="font-size:12px;color:#8892B0;line-height:1.8;">
+      <div><strong style="color:#EEF0FA;">Standard card</strong> — background: --bg-card · border: --border · border-radius: 10px · padding: 16px</div>
+      <div><strong style="color:#EEF0FA;">Table row</strong> — padding: 11px 24px · border-bottom: --border · no border-radius</div>
+      <div><strong style="color:#EEF0FA;">Stats grid</strong> — grid of cells · gap: 1px · background: --border (creates hairline joints) · each cell bg: --bg-base</div>
+      <div><strong style="color:#EEF0FA;">Pattern card</strong> — standard card + confidence badge top-right + description body + mono file paths (↳ prefix)</div>
+      <div><strong style="color:#EEF0FA;">ADR row</strong> — flex space-between · title 13/500 · decision 11/400 · date mono-9 muted · status badge + arrow chip</div>
+    </div>
+
+    <!-- ── 11 Landing page ─────────────────────────────────────────────────── -->
+    <h2 class="doc-h2" id="landing">11 · Landing Page</h2>
+    <p class="doc-lead">Full-scroll page. Navy bg (#080D1A) across all sections, except How It Works which uses --bg-sidebar (#0B1223). Three animated depth layers in the hero.</p>
+
+    <div class="card">
+      <div style="padding:0;">
+        <div style="padding:14px 20px;border-bottom:1px solid rgba(120,140,200,0.08);display:grid;grid-template-columns:100px 1fr 160px;gap:12px;align-items:start;">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#4A5578;">Section</div>
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#4A5578;">Contents</div>
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#4A5578;">Height</div>
+        </div>
+        <div style="padding:12px 20px;border-bottom:1px solid rgba(120,140,200,0.06);display:grid;grid-template-columns:100px 1fr 160px;gap:12px;">
+          <div style="font-family:monospace;font-size:11px;color:#818CF8;">Nav</div>
+          <div style="font-size:12px;color:#8892B0;">Fixed glassmorphism bar · Logo B · nav links · CTA button</div>
+          <div style="font-family:monospace;font-size:10px;color:#4A5578;">52px fixed</div>
+        </div>
+        <div style="padding:12px 20px;border-bottom:1px solid rgba(120,140,200,0.06);display:grid;grid-template-columns:100px 1fr 160px;gap:12px;">
+          <div style="font-family:monospace;font-size:11px;color:#818CF8;">Hero</div>
+          <div style="font-size:12px;color:#8892B0;">3 blob layers + dot grid + floating repo chips (6 items) · headline · 2 CTAs · animated product UI (3D tilted card, looping chat)</div>
+          <div style="font-family:monospace;font-size:10px;color:#4A5578;">100vh</div>
+        </div>
+        <div style="padding:12px 20px;border-bottom:1px solid rgba(120,140,200,0.06);display:grid;grid-template-columns:100px 1fr 160px;gap:12px;">
+          <div style="font-family:monospace;font-size:11px;color:#818CF8;">Features</div>
+          <div style="font-size:12px;color:#8892B0;">2-col editorial layout · sticky left label · 4 numbered feature rows with hairline dividers</div>
+          <div style="font-family:monospace;font-size:10px;color:#4A5578;">min 560px</div>
+        </div>
+        <div style="padding:12px 20px;border-bottom:1px solid rgba(120,140,200,0.06);display:grid;grid-template-columns:100px 1fr 160px;gap:12px;">
+          <div style="font-family:monospace;font-size:11px;color:#818CF8;">How it works</div>
+          <div style="font-size:12px;color:#8892B0;">2-col layout · 3 numbered steps as inline title + desc · bg: --bg-sidebar</div>
+          <div style="font-family:monospace;font-size:10px;color:#4A5578;">min 380px</div>
+        </div>
+        <div style="padding:12px 20px;border-bottom:1px solid rgba(120,140,200,0.06);display:grid;grid-template-columns:100px 1fr 160px;gap:12px;">
+          <div style="font-family:monospace;font-size:11px;color:#818CF8;">CTA</div>
+          <div style="font-size:12px;color:#8892B0;">Centred radial glow · headline · repo URL input with inline submit</div>
+          <div style="font-family:monospace;font-size:10px;color:#4A5578;">min 300px</div>
+        </div>
+        <div style="padding:12px 20px;display:grid;grid-template-columns:100px 1fr 160px;gap:12px;">
+          <div style="font-family:monospace;font-size:11px;color:#818CF8;">Footer</div>
+          <div style="font-size:12px;color:#8892B0;">Logo · Privacy / Terms / GitHub links · bg: --bg-sidebar</div>
+          <div style="font-family:monospace;font-size:10px;color:#4A5578;">60px</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 12 App Pages ────────────────────────────────────────────────────── -->
+    <h2 class="doc-h2" id="app-pages">12 · App Pages</h2>
+    <p class="doc-lead">All app pages share the AppShell: 220px sidebar + full-height content column. Routes are from the Next.js App Router. Each page gets a PageHeader + section-specific content.</p>
+
+    <div class="card" style="overflow:hidden;">
+      <div style="padding:12px 20px;border-bottom:1px solid rgba(120,140,200,0.08);display:grid;grid-template-columns:200px 1fr 180px;gap:12px;">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#4A5578;">Route</div>
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#4A5578;">Page / Contents</div>
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#4A5578;">Key Components</div>
+      </div>
+      <div class="page-row" style="padding:10px 20px;">
+        <div class="page-route">/dashboard/repos</div>
+        <div class="page-desc">Repo list — sortable table, status dots, indexed badge, connect CTA</div>
+        <div class="page-comp">Table rows<br/>StatusBadge<br/>Sort select</div>
+      </div>
+      <div class="page-row" style="padding:10px 20px;">
+        <div class="page-route">/dashboard/repos/[id]</div>
+        <div class="page-desc">Repo overview — 3-col stats grid, indexing progress bar, quick-nav chips</div>
+        <div class="page-comp">Stats grid<br/>Progress bar<br/>Nav chips</div>
+      </div>
+      <div class="page-row" style="padding:10px 20px;">
+        <div class="page-route">/dashboard/repos/new</div>
+        <div class="page-desc">Connect repo — URL input + 3-step what-happens-next explainer</div>
+        <div class="page-comp">Form input<br/>Info column</div>
+      </div>
+      <div class="page-row" style="padding:10px 20px;">
+        <div class="page-route">/dashboard/repos/[id]/ask</div>
+        <div class="page-desc">Ask chat — AI avatar messages, accent user bubbles, source file chips, send button</div>
+        <div class="page-comp">ChatInterface<br/>MessageBubble<br/>SourceChip</div>
+      </div>
+      <div class="page-row" style="padding:10px 20px;">
+        <div class="page-route">/dashboard/repos/[id]/architecture</div>
+        <div class="page-desc">Architecture graph — dot-grid canvas, draggable module nodes, type legend</div>
+        <div class="page-comp">GraphCanvas<br/>Legend</div>
+      </div>
+      <div class="page-row" style="padding:10px 20px;">
+        <div class="page-route">/dashboard/repos/[id]/patterns</div>
+        <div class="page-desc">Patterns — 2×2 confidence-badged cards, description + evidence file paths</div>
+        <div class="page-comp">PatternCard<br/>StatusBadge</div>
+      </div>
+      <div class="page-row" style="padding:10px 20px;">
+        <div class="page-route">/dashboard/repos/[id]/impact</div>
+        <div class="page-desc">Impact analysis — query input, risk summary, affected file list with per-file risk badge</div>
+        <div class="page-comp">ImpactForm<br/>FileRiskRow</div>
+      </div>
+      <div class="page-row" style="padding:10px 20px;">
+        <div class="page-route">/dashboard/repos/[id]/knowledge</div>
+        <div class="page-desc">Knowledge entries — title, body, file citation, tag chips</div>
+        <div class="page-comp">KnowledgeRow<br/>TagChip</div>
+      </div>
+      <div class="page-row" style="padding:10px 20px;">
+        <div class="page-route">/dashboard/repos/[id]/adrs</div>
+        <div class="page-desc">ADR list — title, decision excerpt, date, accepted/proposed badge</div>
+        <div class="page-comp">ADRRow<br/>StatusBadge</div>
+      </div>
+      <div class="page-row" style="padding:10px 20px;">
+        <div class="page-route">/dashboard/repos/[id]/apis</div>
+        <div class="page-desc">API inventory — table: name / type / endpoint / status / source file</div>
+        <div class="page-comp">APITable<br/>StatusBadge</div>
+      </div>
+      <div class="page-row" style="padding:10px 20px;border-bottom:none;">
+        <div class="page-route">/dashboard/settings</div>
+        <div class="page-desc">Settings — profile card, connected accounts (GitHub/Google/Email), sign out</div>
+        <div class="page-comp">ProfileCard<br/>AccountRow</div>
+      </div>
+    </div>
+
+    <!-- ── 13 Implementation notes ────────────────────────────────────────── -->
+    <h2 class="doc-h2" id="impl">13 · Implementation Notes</h2>
+
+    <div class="card card-inner" style="display:flex;flex-direction:column;gap:16px;">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#EEF0FA;margin-bottom:5px;">Fonts — load via Google Fonts</div>
+        <pre style="margin:0;"><code>Inter: 400, 500, 600, 700, 800, 900
+JetBrains Mono: 400, 500, 600
+<span class="co">/* Never use Arial, Roboto, or system-ui as a primary face */</span></code></pre>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#EEF0FA;margin-bottom:5px;">Layout — no icon rail</div>
+        <div style="font-size:12px;color:#8892B0;line-height:1.7;">The original 44px icon rail + 168px context panel are replaced by a single 220px sidebar. The layout is <code style="font-family:monospace;font-size:11px;color:#818CF8;">display: grid; grid-template-columns: 220px 1fr</code> at root. Sidebar is <code style="font-family:monospace;font-size:11px;color:#818CF8;">position: sticky; top: 0; height: 100vh</code>.</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#EEF0FA;margin-bottom:5px;">Navy not black — avoid near-black hex values</div>
+        <div style="font-size:12px;color:#8892B0;line-height:1.7;">Do NOT use <code style="font-family:monospace;font-size:11px;color:#EF4444;">#09090B</code>, <code style="font-family:monospace;font-size:11px;color:#EF4444;">#0C0C0E</code>, or <code style="font-family:monospace;font-size:11px;color:#EF4444;">#18181F</code> from the old palette. Minimum base is <code style="font-family:monospace;font-size:11px;color:#818CF8;">#080D1A</code>.</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#EEF0FA;margin-bottom:5px;">Borders — use rgba, not hex</div>
+        <div style="font-size:12px;color:#8892B0;line-height:1.7;">All borders should be <code style="font-family:monospace;font-size:11px;color:#818CF8;">rgba(120,140,200,0.09)</code> (default) or <code style="font-family:monospace;font-size:11px;color:#818CF8;">rgba(120,140,200,0.18)</code> (stronger). This gives the navy-blue tint to separators rather than neutral gray.</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#EEF0FA;margin-bottom:5px;">AI-generated content — always indigo</div>
+        <div style="font-size:12px;color:#8892B0;line-height:1.7;">Any content generated by AI (chat responses, architecture graph, pattern cards, ADRs, impact analysis) uses <code style="font-family:monospace;font-size:11px;color:#818CF8;">#6366F1</code> as its accent. This creates a consistent "AI authored" signal across the app.</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#EEF0FA;margin-bottom:5px;">Landing page animations</div>
+        <div style="font-size:12px;color:#8892B0;line-height:1.7;">Hero uses pure CSS animations: <code style="font-family:monospace;font-size:11px;color:#818CF8;">blobA/B/C</code> (14–22s ease-in-out infinite), <code style="font-family:monospace;font-size:11px;color:#818CF8;">chipRise</code> (linear, 11–17s per chip), <code style="font-family:monospace;font-size:11px;color:#818CF8;">dotPulse</code> for live repo indicator, <code style="font-family:monospace;font-size:11px;color:#818CF8;">shimmerBtn</code> for CTA sweep. Chat loop is driven by React state with per-step timeouts.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:56px;padding-top:24px;border-top:1px solid rgba(120,140,200,0.08);display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#4A5578;">Dev Day One — Design Handoff v1.0 · June 2026</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:20px;height:20px;border-radius:5px;background:#6366F1;display:flex;align-items:center;justify-content:center;">
+          <svg width="12" height="12" viewBox="0 0 80 80" fill="none">
+            <polyline points="30,12 12,40 30,68" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="50,12 68,40 50,68" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M40 26 L42.8 37.2 L54 40 L42.8 42.8 L40 54 L37.2 42.8 L26 40 L37.2 37.2 Z" fill="white" opacity="0.85"/>
+          </svg>
+        </div>
+        <span style="font-size:11px;font-weight:700;color:#8892B0;">Dev Day One</span>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // Active nav highlight
+  const links = document.querySelectorAll('.nav-link');
+  const headings = document.querySelectorAll('.doc-h2');
+  function updateActive() {
+    let active = null;
+    headings.forEach(h => { if (h.getBoundingClientRect().top <= 80) active = h.id; });
+    links.forEach(l => {
+      l.classList.toggle('active', l.getAttribute('href') === '#' + active);
+    });
+  }
+  document.querySelector('.content').addEventListener('scroll', updateActive);
+  window.addEventListener('scroll', updateActive);
+  links.forEach(l => {
+    l.addEventListener('click', e => {
+      e.preventDefault();
+      const id = l.getAttribute('href').slice(1);
+      document.getElementById(id)?.scrollIntoView({ block: 'start' });
+    });
+  });
+</script>
+</body>
+</html>
