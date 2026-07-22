@@ -29,11 +29,6 @@ Dev Day One is an AI-powered knowledge assistant for GitHub repositories. Connec
 
 ---
 
-## Screenshots
-
-> Add screenshots or a GIF demo here before sharing publicly.  
-> Recommended: `docs/screenshots/dashboard.png`, `docs/screenshots/chat.png`, `docs/screenshots/architecture.png`
-
 ---
 
 ## Tech Stack
@@ -217,18 +212,6 @@ Interactive docs available at `http://localhost:8000/docs` (Swagger UI).
 
 ---
 
-## Roadmap
-
-- [ ] Deploy: Vercel (frontend) + Render (backend)
-- [ ] Mobile-responsive layout
-- [ ] Shareable repo links
-- [ ] Webhook trigger on indexing complete
-- [ ] API key management
-- [ ] Avatar upload + account deletion
-- [ ] Dark/light theme toggle
-- [ ] Org invite system
-
----
 
 ## License
 
