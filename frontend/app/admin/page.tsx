@@ -64,10 +64,10 @@ export default function AdminPage() {
 
   if (statsError) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#09090B]">
+      <div className="flex min-h-screen items-center justify-center bg-graphite">
         <div className="text-center">
-          <Shield className="mx-auto mb-3 h-8 w-8 text-zinc-700" />
-          <p className="text-sm text-zinc-500">Admin access required.</p>
+          <Shield className="mx-auto mb-3 h-8 w-8 text-fog" />
+          <p className="text-sm text-chalk0">Admin access required.</p>
         </div>
       </div>
     )
@@ -75,41 +75,41 @@ export default function AdminPage() {
 
   const statCards = stats
     ? [
-        { label: "Users", value: stats.total_users, icon: Users, color: "text-indigo-400" },
-        { label: "Organisations", value: stats.total_orgs, icon: Shield, color: "text-amber-400" },
-        { label: "Repos", value: stats.total_repos, icon: GitBranch, color: "text-emerald-400" },
-        { label: "Indexed", value: stats.indexed_repos, icon: Database, color: "text-emerald-400" },
-        { label: "Chats", value: stats.total_chats, icon: MessageSquare, color: "text-indigo-400" },
-        { label: "Index Jobs", value: stats.total_index_jobs, icon: BarChart3, color: "text-zinc-400" },
+        { label: "Users", value: stats.total_users, icon: Users, color: "text-route" },
+        { label: "Organisations", value: stats.total_orgs, icon: Shield, color: "text-signal" },
+        { label: "Repos", value: stats.total_repos, icon: GitBranch, color: "text-route" },
+        { label: "Indexed", value: stats.indexed_repos, icon: Database, color: "text-route" },
+        { label: "Chats", value: stats.total_chats, icon: MessageSquare, color: "text-route" },
+        { label: "Index Jobs", value: stats.total_index_jobs, icon: BarChart3, color: "text-fog" },
       ]
     : []
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-zinc-200">
+    <div className="min-h-screen bg-graphite text-chalk">
       {/* Header */}
-      <div className="border-b border-white/[0.05] bg-[#0C0C0E] px-6 py-4">
+      <div className="border-b border-kerb bg-asphalt px-6 py-4">
         <div className="mx-auto flex max-w-5xl items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-[22px] w-[22px] items-center justify-center rounded-[5px] bg-amber-500 text-[11px] font-black text-zinc-900">D</div>
-            <span className="text-sm font-semibold text-zinc-100">Dev Day One</span>
-            <span className="rounded-full bg-red-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-widest text-red-400">Admin</span>
+            <div className="flex h-[22px] w-[22px] items-center justify-center rounded-[5px] bg-signal text-[11px] font-black text-signal-ink">D</div>
+            <span className="text-sm font-semibold text-chalk">Dev Day One</span>
+            <span className="rounded-full border border-alert/40 px-2 py-0.5 text-xs font-bold text-alert">Admin</span>
           </div>
-          <a href="/dashboard" className="text-[11px] text-zinc-600 hover:text-zinc-400">← Back to app</a>
+          <a href="/dashboard" className="text-[11px] text-fog hover:text-fog">Back to the app</a>
         </div>
       </div>
 
       <div className="mx-auto max-w-5xl px-6 py-8">
-        <h1 className="mb-6 text-xl font-extrabold tracking-tight text-zinc-50">Admin Panel</h1>
+        <h1 className="mb-6 text-xl font-extrabold tracking-tight text-chalk">Admin Panel</h1>
 
         {/* Tabs */}
-        <div className="mb-6 flex gap-1 rounded-lg border border-white/[0.06] bg-white/[0.02] p-1 w-fit">
+        <div className="mb-6 flex gap-1 rounded-[var(--radius-control)] border border-kerb bg-transparent p-1 w-fit">
           {(["stats", "users", "repos"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={cn(
-                "rounded-md px-4 py-1.5 text-[11px] font-semibold capitalize transition-colors",
-                tab === t ? "bg-white/[0.07] text-zinc-100" : "text-zinc-600 hover:text-zinc-400"
+                "rounded-[var(--radius-control)] px-4 py-1.5 text-[11px] font-semibold capitalize transition-colors",
+                tab === t ? "bg-asphalt text-chalk" : "text-fog hover:text-fog"
               )}
             >
               {t}
@@ -122,15 +122,15 @@ export default function AdminPage() {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {statsLoading
               ? Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-24 animate-pulse rounded-xl bg-zinc-800/40" />
+                  <div key={i} className="h-24 animate-pulse rounded-[var(--radius-panel)] bg-zinc-800/40" />
                 ))
               : statCards.map((s) => (
-                  <div key={s.label} className="rounded-xl border border-white/[0.06] bg-[#0C0C0E] p-5">
+                  <div key={s.label} className="rounded-[var(--radius-panel)] border border-kerb bg-asphalt p-5">
                     <div className="mb-2 flex items-center gap-2">
                       <s.icon className={cn("h-4 w-4", s.color)} />
-                      <p className="font-mono text-[10px] uppercase tracking-widest text-zinc-600">{s.label}</p>
+                      <p className="text-sm text-fog">{s.label}</p>
                     </div>
-                    <p className="text-2xl font-extrabold tracking-tight text-zinc-100">{s.value.toLocaleString()}</p>
+                    <p className="text-2xl font-extrabold tracking-tight text-chalk">{s.value.toLocaleString()}</p>
                   </div>
                 ))}
           </div>
@@ -138,29 +138,29 @@ export default function AdminPage() {
 
         {/* Users tab */}
         {tab === "users" && (
-          <div className="rounded-xl border border-white/[0.06] bg-[#0C0C0E]">
+          <div className="rounded-[var(--radius-panel)] border border-kerb bg-asphalt">
             {users.length === 0 && (
-              <p className="px-5 py-4 text-sm text-zinc-600">No users found.</p>
+              <p className="px-5 py-4 text-sm text-fog">No users found.</p>
             )}
             {users.map((u, i) => (
               <div
                 key={u.id}
-                className={cn("flex items-center justify-between px-5 py-3", i < users.length - 1 && "border-b border-white/[0.04]")}
+                className={cn("flex items-center justify-between px-5 py-3", i < users.length - 1 && "border-b border-kerb")}
               >
                 <div>
-                  <p className="text-sm text-zinc-200">{u.email ?? "—"}</p>
-                  <p className="font-mono text-[10px] text-zinc-700">
+                  <p className="text-sm text-chalk">{u.email ?? "—"}</p>
+                  <p className="font-mono text-[10px] text-fog">
                     {u.created_at ? new Date(u.created_at).toLocaleDateString() : "—"}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   {u.is_admin && (
-                    <span className="rounded-full bg-red-500/10 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-red-400">admin</span>
+                    <span className="rounded-full border border-alert/40 px-2 py-0.5 text-xs font-bold text-alert">admin</span>
                   )}
                   <button
                     onClick={() => toggleAdmin.mutate(u.id)}
                     disabled={toggleAdmin.isPending}
-                    className="rounded-md border border-white/[0.07] px-2.5 py-1 text-[10px] text-zinc-500 hover:border-white/[0.12] hover:text-zinc-300 disabled:opacity-50"
+                    className="rounded-[var(--radius-control)] border border-kerb px-2.5 py-1 text-[10px] text-chalk0 hover:border-fog hover:text-chalk disabled:opacity-50"
                   >
                     {u.is_admin ? "Revoke admin" : "Make admin"}
                   </button>
@@ -172,29 +172,29 @@ export default function AdminPage() {
 
         {/* Repos tab */}
         {tab === "repos" && (
-          <div className="rounded-xl border border-white/[0.06] bg-[#0C0C0E]">
+          <div className="rounded-[var(--radius-panel)] border border-kerb bg-asphalt">
             {repos.length === 0 && (
-              <p className="px-5 py-4 text-sm text-zinc-600">No repositories found.</p>
+              <p className="px-5 py-4 text-sm text-fog">No repositories found.</p>
             )}
             {repos.map((r, i) => (
               <div
                 key={r.id}
-                className={cn("flex items-center justify-between px-5 py-3", i < repos.length - 1 && "border-b border-white/[0.04]")}
+                className={cn("flex items-center justify-between px-5 py-3", i < repos.length - 1 && "border-b border-kerb")}
               >
                 <div>
-                  <p className="font-mono text-sm text-zinc-200">{r.full_name}</p>
-                  <p className="font-mono text-[10px] text-zinc-700">
+                  <p className="font-mono text-sm text-chalk">{r.full_name}</p>
+                  <p className="font-mono text-[10px] text-fog">
                     {r.created_at ? new Date(r.created_at).toLocaleDateString() : "—"}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   {r.is_private && (
-                    <span className="rounded border border-zinc-700/40 px-1.5 py-0.5 font-mono text-[9px] text-zinc-500">private</span>
+                    <span className="rounded border border-zinc-700/40 px-1.5 py-0.5 font-mono text-[9px] text-chalk0">private</span>
                   )}
                   <span className={cn("rounded border px-1.5 py-0.5 font-mono text-[9px]",
                     r.indexed
-                      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-                      : "border-zinc-700/40 bg-zinc-800/50 text-zinc-600"
+                      ? "border-route/40 text-route"
+                      : "border-zinc-700/40 bg-zinc-800/50 text-fog"
                   )}>
                     {r.indexed ? "indexed" : "not indexed"}
                   </span>

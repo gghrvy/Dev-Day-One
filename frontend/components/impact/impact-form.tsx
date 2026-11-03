@@ -1,20 +1,57 @@
 "use client"
 
 import { useState } from "react"
-import { useMutation } from "@tanstack/react-query"
-import { Zap } from "lucide-react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiFetch } from "@/lib/api/client"
 import { cn } from "@/lib/utils"
+import { formatDate } from "@/lib/format"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import type { ImpactAnalysis } from "@/types"
 
-const RISK_STYLES: Record<string, string> = {
-  high:   "text-red-400 border-red-500/20 bg-red-500/10",
-  medium: "text-amber-400 border-amber-500/20 bg-amber-500/10",
-  low:    "text-emerald-400 border-emerald-500/20 bg-emerald-500/10",
+const RISK: Record<string, { label: string; plate: string; text: string }> = {
+  high: { label: "High risk", plate: "border-alert bg-alert text-graphite", text: "text-alert" },
+  medium: { label: "Medium risk", plate: "border-signal bg-signal text-signal-ink", text: "text-signal" },
+  low: { label: "Low risk", plate: "border-route text-route", text: "text-route" },
+}
+
+export function ImpactResult({ analysis }: { analysis: ImpactAnalysis }) {
+  const { result } = analysis
+  const r = RISK[result.risk_level] ?? RISK.low
+  return (
+    <article aria-labelledby={`impact-${analysis.id}`} className="border-t border-kerb py-6">
+      <p className="text-sm text-fog">{formatDate(analysis.created_at)}</p>
+      <h2 id={`impact-${analysis.id}`} className="mt-1 text-[1.25rem] font-bold text-chalk">
+        {analysis.query}
+      </h2>
+      <div className="mt-3 flex flex-wrap items-start gap-4">
+        {/* The risk level is a sign plate: the one thing to read first */}
+        <span className={cn("rounded-[var(--radius-control)] border-2 px-3 py-1 font-extrabold", r.plate)}>{r.label}</span>
+        <p className="min-w-0 flex-1 basis-[28ch] text-chalk">{result.summary}</p>
+      </div>
+      {result.affected_files.length > 0 && (
+        <ul aria-label="Affected files" className="mt-5">
+          {result.affected_files.map((f) => {
+            const fr = RISK[f.risk] ?? RISK.low
+            return (
+              <li key={f.path} className="grid gap-1 border-b border-kerb py-3 md:grid-cols-[1fr_7rem] md:gap-6">
+                <div className="min-w-0">
+                  <p className="break-all font-mono text-[0.875rem] text-route">{f.path}</p>
+                  <p className="mt-0.5 text-fog">{f.reason}</p>
+                </div>
+                <p className={cn("text-sm font-semibold md:text-right", fr.text)}>{fr.label}</p>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </article>
+  )
 }
 
 export function ImpactForm({ repoId }: { repoId: string }) {
   const [query, setQuery] = useState("")
+  const qc = useQueryClient()
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -22,64 +59,32 @@ export function ImpactForm({ repoId }: { repoId: string }) {
         method: "POST",
         body: JSON.stringify({ query }),
       }),
+    onSuccess: () => {
+      setQuery("")
+      qc.invalidateQueries({ queryKey: ["impact", repoId] })
+    },
   })
 
-  const result = mutation.data?.result
-
   return (
-    <div className="space-y-5 px-5 py-5">
-      <form
-        onSubmit={(e) => { e.preventDefault(); if (query.trim()) mutation.mutate() }}
-        className="flex gap-2"
-      >
-        <input
-          className="w-full flex-1 rounded-md border border-white/[0.07] bg-[#0C0C0E] px-3.5 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-700 focus:border-white/[0.15] focus:outline-none"
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        if (query.trim()) mutation.mutate()
+      }}
+      className="max-w-[48rem]"
+    >
+      <label htmlFor="impact-query" className="font-bold text-chalk">Describe a change</label>
+      <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+        <Input
+          id="impact-query"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder='e.g. "What breaks if I change the auth middleware?"'
+          placeholder="Replace the auth middleware with API keys"
         />
-        <button
-          type="submit"
-          disabled={mutation.isPending || !query.trim()}
-          className="flex items-center gap-1.5 rounded-md bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-400 disabled:opacity-50"
-        >
-          <Zap className="h-3.5 w-3.5" />
-          {mutation.isPending ? "Analyzing…" : "Analyze"}
-        </button>
-      </form>
-
-      {result && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <span className={cn("rounded border px-2 py-0.5 font-mono text-[11px]", RISK_STYLES[result.risk_level])}>
-              {result.risk_level} risk
-            </span>
-            <p className="text-sm text-zinc-400">{result.summary}</p>
-          </div>
-
-          {result.affected_files.length > 0 && (
-            <div className="rounded-xl border border-white/[0.06] bg-[#0C0C0E]">
-              <div className="border-b border-white/[0.04] px-4 py-2.5">
-                <p className="font-mono text-[10px] uppercase tracking-widest text-zinc-600">Affected files</p>
-              </div>
-              {result.affected_files.map((f) => (
-                <div
-                  key={f.path}
-                  className="flex items-start gap-3 border-b border-white/[0.04] px-4 py-3 last:border-0"
-                >
-                  <span className={cn("mt-0.5 flex-shrink-0 rounded border px-1.5 py-0.5 font-mono text-[9px]", RISK_STYLES[f.risk])}>
-                    {f.risk}
-                  </span>
-                  <div>
-                    <p className="font-mono text-[12px] text-zinc-200">{f.path}</p>
-                    <p className="mt-0.5 text-xs text-zinc-500">{f.reason}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+        <Button type="submit" disabled={mutation.isPending || !query.trim()}>
+          {mutation.isPending ? "Analysing…" : "Analyse impact"}
+        </Button>
+      </div>
+    </form>
   )
 }

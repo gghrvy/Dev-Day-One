@@ -3,10 +3,14 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
-import { Plus } from "lucide-react"
 import { apiFetch } from "@/lib/api/client"
+import { IS_DEMO } from "@/lib/demo"
 import { PageHeader } from "@/components/layout/page-header"
+import { PageBody, EmptyState } from "@/components/layout/page-body"
 import { RepoRow } from "@/components/repos/repo-row"
+import { Button } from "@/components/ui/button"
+import { SkeletonList } from "@/components/ui/skeleton"
+import { controlClass } from "@/components/ui/field"
 import type { Repository } from "@/types"
 
 type SortKey = "date" | "name" | "indexed"
@@ -27,58 +31,45 @@ export default function ReposPage() {
   })
   const repos = rawRepos ? sortRepos(rawRepos, sort) : undefined
 
-  const action = (
-    <div className="flex items-center gap-2">
-      <select
-        value={sort}
-        onChange={(e) => setSort(e.target.value as SortKey)}
-        className="rounded-md border border-white/[0.07] bg-transparent px-2 py-1.5 text-[11px] text-zinc-400 focus:outline-none"
-      >
-        <option value="date">Newest</option>
-        <option value="name">Name</option>
-        <option value="indexed">Indexed first</option>
-      </select>
-      <Link
-        href="/dashboard/repos/new"
-        className="flex items-center gap-1.5 rounded-md bg-amber-500 px-3 py-1.5 text-[11px] font-semibold text-zinc-900 transition-colors hover:bg-amber-400"
-      >
-        <Plus className="h-3 w-3" />
-        Connect repo
-      </Link>
-    </div>
-  )
-
   return (
     <div>
-      <PageHeader title="Repositories" meta={repos ? `${repos.length} connected` : undefined} action={action} />
-
-      <div className="mt-4">
-        {isLoading && (
-          <div className="space-y-px">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 border-b border-white/[0.04] px-5 py-3.5">
-                <div className="h-1.5 w-1.5 rounded-full bg-zinc-800" />
-                <div className="h-3 w-48 rounded bg-zinc-800" />
-              </div>
-            ))}
-          </div>
-        )}
-
+      <PageHeader
+        title="Repositories"
+        description={IS_DEMO ? "The public demo has one sample repository: Dev Day One's own source code." : "Repositories you've connected."}
+        meta={repos && !IS_DEMO ? `${repos.length} connected` : undefined}
+        action={
+          !IS_DEMO && (
+            <>
+              {repos && repos.length > 1 && (
+                <>
+                  <label htmlFor="repo-sort" className="sr-only">Sort repositories</label>
+                  <select id="repo-sort" value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className={controlClass("h-10 w-auto py-0")}>
+                    <option value="date">Newest first</option>
+                    <option value="name">By name</option>
+                    <option value="indexed">Indexed first</option>
+                  </select>
+                </>
+              )}
+              <Button asChild>
+                <Link href="/dashboard/repos/new">Connect a repository</Link>
+              </Button>
+            </>
+          )
+        }
+      />
+      <PageBody>
+        {isLoading && <SkeletonList rows={3} />}
         {!isLoading && repos?.length === 0 && (
-          <div className="px-5 py-10 text-center">
-            <p className="text-sm text-zinc-600">No repositories yet.</p>
-            <Link
-              href="/dashboard/repos/new"
-              className="mt-3 inline-flex items-center gap-1.5 text-sm text-amber-500 hover:text-amber-400"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Connect your first repo
-            </Link>
-          </div>
+          <EmptyState title="No repositories yet">
+            Connect a GitHub repository to start asking questions about it.
+          </EmptyState>
         )}
-
-        {repos?.map((repo) => <RepoRow key={repo.id} repo={repo} />)}
-      </div>
+        {repos && repos.length > 0 && (
+          <ul className="max-w-[60rem]">
+            {repos.map((repo) => <RepoRow key={repo.id} repo={repo} />)}
+          </ul>
+        )}
+      </PageBody>
     </div>
   )
 }

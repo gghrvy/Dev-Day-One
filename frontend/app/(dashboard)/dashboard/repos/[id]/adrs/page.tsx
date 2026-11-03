@@ -3,10 +3,12 @@
 import { use } from "react"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
-import { Plus } from "lucide-react"
 import { apiFetch } from "@/lib/api/client"
+import { IS_DEMO } from "@/lib/demo"
 import { PageHeader } from "@/components/layout/page-header"
+import { PageBody, EmptyState } from "@/components/layout/page-body"
 import { AdrCard } from "@/components/adrs/adr-card"
+import { Button } from "@/components/ui/button"
 import { SkeletonList } from "@/components/ui/skeleton"
 import type { Adr } from "@/types"
 
@@ -17,34 +19,31 @@ export default function AdrsPage({ params }: { params: Promise<{ id: string }> }
     queryFn: () => apiFetch<Adr[]>(`/repos/${id}/adrs`),
   })
 
-  const action = (
-    <Link
-      href={`/dashboard/repos/${id}/adrs/new`}
-      className="flex items-center gap-1.5 rounded-md bg-amber-500 px-3 py-1.5 text-[11px] font-semibold text-zinc-900 hover:bg-amber-400"
-    >
-      <Plus className="h-3 w-3" />
-      New ADR
-    </Link>
-  )
-
   return (
     <div>
-      <PageHeader title="Architecture Decision Records" meta={adrs.length ? `${adrs.length} records` : undefined} action={action} />
-      <div className="mt-2">
+      <PageHeader
+        title="Decisions"
+        description="Architecture decision records: what was decided, why, and what it costs."
+        meta={adrs.length ? `${adrs.length} records` : undefined}
+        action={
+          !IS_DEMO && (
+            <Button asChild>
+              <Link href={`/dashboard/repos/${id}/adrs/new`}>New record</Link>
+            </Button>
+          )
+        }
+      />
+      <PageBody>
         {isLoading && <SkeletonList rows={3} />}
         {!isLoading && adrs.length === 0 && (
-          <div className="px-5 py-10 text-center">
-            <p className="text-sm text-zinc-600">No ADRs yet. Document your first architecture decision.</p>
-            <Link
-              href={`/dashboard/repos/${id}/adrs/new`}
-              className="mt-3 inline-flex items-center gap-1.5 text-sm text-amber-500 hover:text-amber-400"
-            >
-              <Plus className="h-3.5 w-3.5" /> Create first ADR
-            </Link>
-          </div>
+          <EmptyState title="No decision records yet">Write one when you make a choice future teammates will ask about.</EmptyState>
         )}
-        {adrs.map((adr) => <AdrCard key={adr.id} adr={adr} repoId={id} />)}
-      </div>
+        {adrs.length > 0 && (
+          <ul className="max-w-[60rem]">
+            {adrs.map((adr) => <AdrCard key={adr.id} adr={adr} repoId={id} />)}
+          </ul>
+        )}
+      </PageBody>
     </div>
   )
 }

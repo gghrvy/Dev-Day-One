@@ -1,28 +1,17 @@
 import asyncio
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from config import settings
-from routers import admin as admin_router
-from routers import adrs as adrs_router
-from routers import api_intel as api_intel_router
-from routers import architecture as architecture_router
-from routers import impact as impact_router
-from routers import indexing as indexing_router
-from routers import knowledge as knowledge_router
-from routers import patterns as patterns_router
-from routers import rag as rag_router
-from routers import repos as repos_router
+from config import Settings, settings
 from utils.logger import get_logger
 
 log = get_logger(__name__)
 
-app = FastAPI(title="Day One API")
 
-
-@app.on_event("startup")
-async def _warmup_embedder():
+@asynccontextmanager
+async def _warmup_embedder(app: FastAPI):
     """Download/load the embedding model at startup so the first index call isn't blocked."""
     try:
         from services.embeddings import get_embedder
@@ -30,27 +19,59 @@ async def _warmup_embedder():
         log.info("embedder_ready")
     except Exception as e:
         log.warning("embedder_warmup_failed", error=str(e))
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app.include_router(admin_router.router)
-app.include_router(repos_router.router)
-app.include_router(indexing_router.router)
-app.include_router(rag_router.router)
-app.include_router(adrs_router.router)
-app.include_router(patterns_router.router)
-app.include_router(knowledge_router.router)
-app.include_router(architecture_router.router)
-app.include_router(impact_router.router)
-app.include_router(api_intel_router.router)
+    yield
 
 
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+def _mount_real_routers(app: FastAPI) -> None:
+    # Imported here so demo mode never loads the database, Groq or the embedding model.
+    from routers import admin, adrs, api_intel, architecture, impact, indexing, knowledge, patterns, rag, repos
+
+    for module in (admin, repos, indexing, rag, adrs, patterns, knowledge, architecture, impact, api_intel):
+        app.include_router(module.router)
+
+
+def _mount_demo(app: FastAPI, s: Settings) -> None:
+    from demo.answers import AnswerCache
+    from demo.guard import DemoAllowListMiddleware
+    from demo.limits import HourlyLimiter
+    from demo.router import router as demo_router
+
+    app.state.demo_limiter = HourlyLimiter(s.DEMO_ASK_PER_VISITOR_PER_HOUR, s.DEMO_ASK_GLOBAL_PER_HOUR)
+    app.state.demo_answers = AnswerCache()
+    app.state.demo_stream_delay = s.DEMO_STREAM_DELAY
+    app.add_middleware(DemoAllowListMiddleware)
+    app.include_router(demo_router)
+
+
+def create_app(s: Settings = settings) -> FastAPI:
+    demo = bool(s.DEMO_MODE)
+    app = FastAPI(
+        title="Day One API",
+        lifespan=None if demo else _warmup_embedder,
+        docs_url=None if demo else "/docs",
+        redoc_url=None if demo else "/redoc",
+        openapi_url=None if demo else "/openapi.json",
+    )
+
+    if demo:
+        _mount_demo(app, s)
+    else:
+        _mount_real_routers(app)
+
+    @app.api_route("/health", methods=["GET", "HEAD"])
+    def health():
+        return {"status": "ok"}
+
+    # Added last so it is the outermost layer: preflights are answered and 403s still carry CORS headers.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[s.FRONTEND_URL],
+        allow_credentials=not demo,
+        allow_methods=["GET", "POST"] if demo else ["*"],
+        allow_headers=["*"],
+        expose_headers=["Retry-After"],
+    )
+    return app
+
+
+app = create_app()

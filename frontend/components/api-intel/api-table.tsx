@@ -1,60 +1,58 @@
-import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { safeHref } from "@/lib/format"
 import type { ApiInventoryItem } from "@/types"
 
-const TYPE_BADGE: Record<string, string> = {
-  internal: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
-  external: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+const STATUS: Record<string, { label: string; variant: "route" | "muted" | "alert" }> = {
+  active: { label: "In use", variant: "route" },
+  deprecated: { label: "Deprecated", variant: "alert" },
+  unknown: { label: "Unknown", variant: "muted" },
 }
 
-const STATUS_BADGE: Record<string, string> = {
-  active:     "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  deprecated: "bg-zinc-500/10 text-zinc-500 border-zinc-700/40",
-  unknown:    "bg-zinc-800/50 text-zinc-600 border-zinc-700/40",
+function Endpoint({ value }: { value: string }) {
+  // Scanned data comes from a model reading third-party code: only real http(s) URLs become links.
+  const href = safeHref(value)
+  return href ? (
+    <a href={href} target="_blank" rel="noopener noreferrer nofollow" className="break-all font-mono text-[0.875rem] text-route underline-offset-4 hover:underline">
+      {value}
+    </a>
+  ) : (
+    <span className="break-all font-mono text-[0.875rem] text-chalk">{value}</span>
+  )
 }
 
 export function ApiTable({ items }: { items: ApiInventoryItem[] }) {
-  const internal = items.filter((i) => i.api_type === "internal")
-  const external = items.filter((i) => i.api_type === "external")
+  const groups = [
+    { title: "Routes this code serves", list: items.filter((i) => i.api_type === "internal") },
+    { title: "Services this code calls", list: items.filter((i) => i.api_type === "external") },
+  ]
 
   return (
-    <div className="space-y-6">
-      {[
-        { label: "Internal APIs", list: internal },
-        { label: "External APIs", list: external },
-      ].map(({ label, list }) =>
+    <div className="space-y-10">
+      {groups.map(({ title, list }) =>
         list.length > 0 ? (
-          <div key={label}>
-            <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-zinc-600">{label}</p>
-            <div className="rounded-xl border border-white/[0.06] bg-[#0C0C0E]">
-              {list.map((item, i) => (
-                <div
-                  key={item.id}
-                  className={cn("flex items-start gap-3 px-4 py-3", i < list.length - 1 && "border-b border-white/[0.04]")}
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-[13px] font-medium text-zinc-200">{item.name}</span>
-                      {item.version && (
-                        <span className="font-mono text-[10px] text-zinc-600">{item.version}</span>
-                      )}
-                      <span className={cn("rounded border px-1.5 py-0.5 font-mono text-[9px]", TYPE_BADGE[item.api_type])}>
-                        {item.api_type}
-                      </span>
-                      <span className={cn("rounded border px-1.5 py-0.5 font-mono text-[9px]", STATUS_BADGE[item.status])}>
-                        {item.status}
-                      </span>
+          <section key={title} aria-label={title} className="max-w-[64rem]">
+            <h2 className="text-[1.25rem] font-bold text-chalk">
+              {title} <span className="font-normal text-fog">({list.length})</span>
+            </h2>
+            <ul className="mt-3">
+              {list.map((item) => {
+                const s = STATUS[item.status] ?? STATUS.unknown
+                return (
+                  <li key={item.id} className="grid gap-1 border-b border-kerb py-3.5 first:border-t md:grid-cols-[16rem_1fr_auto] md:items-baseline md:gap-6">
+                    <p className="font-bold text-chalk">
+                      {item.name}
+                      {item.version && <span className="ml-2 font-normal text-fog">{item.version}</span>}
+                    </p>
+                    <div className="min-w-0">
+                      {item.endpoint && <Endpoint value={item.endpoint} />}
+                      {item.file_path && <p className="break-all font-mono text-[0.8125rem] text-fog">{item.file_path}</p>}
                     </div>
-                    {item.endpoint && (
-                      <p className="mt-0.5 truncate font-mono text-[11px] text-zinc-600">{item.endpoint}</p>
-                    )}
-                    {item.file_path && (
-                      <p className="mt-0.5 font-mono text-[11px] text-zinc-700">{item.file_path}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                    <Badge variant={s.variant} className="w-fit">{s.label}</Badge>
+                  </li>
+                )
+              })}
+            </ul>
+          </section>
         ) : null
       )}
     </div>

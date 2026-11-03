@@ -2,10 +2,13 @@
 
 import { use } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Radio } from "lucide-react"
 import { apiFetch } from "@/lib/api/client"
+import { IS_DEMO } from "@/lib/demo"
 import { PageHeader } from "@/components/layout/page-header"
+import { PageBody, EmptyState } from "@/components/layout/page-body"
 import { ApiTable } from "@/components/api-intel/api-table"
+import { Button } from "@/components/ui/button"
+import { SkeletonList } from "@/components/ui/skeleton"
 import type { ApiInventoryItem } from "@/types"
 
 export default function ApisPage({ params }: { params: Promise<{ id: string }> }) {
@@ -24,36 +27,27 @@ export default function ApisPage({ params }: { params: Promise<{ id: string }> }
     },
   })
 
-  const action = (
-    <button
-      onClick={() => scan.mutate()}
-      disabled={scan.isPending}
-      className="flex items-center gap-1.5 rounded-md bg-indigo-500 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-indigo-400 disabled:opacity-50"
-    >
-      <Radio className="h-3 w-3" />
-      {scan.isPending ? "Scanning…" : apis.length ? "Re-scan" : "Scan APIs"}
-    </button>
-  )
-
   return (
     <div>
       <PageHeader
-        title="API Intelligence"
-        meta={apis.length ? `${apis.length} APIs found` : undefined}
-        action={action}
+        title="APIs"
+        description="Every internal route and external service the code talks to."
+        meta={apis.length ? `${apis.length} found` : undefined}
+        action={
+          !IS_DEMO && (
+            <Button onClick={() => scan.mutate()} disabled={scan.isPending}>
+              {scan.isPending ? "Scanning…" : apis.length ? "Scan again" : "Scan for APIs"}
+            </Button>
+          )
+        }
       />
-      <div className="px-5 py-5">
-        {isLoading && <p className="text-sm text-zinc-600">Loading…</p>}
+      <PageBody>
+        {isLoading && <SkeletonList rows={5} />}
         {!isLoading && apis.length === 0 && (
-          <div className="py-10 text-center">
-            <Radio className="mx-auto mb-3 h-8 w-8 text-zinc-700" />
-            <p className="text-sm text-zinc-600">
-              No APIs inventoried yet. Click &quot;Scan APIs&quot; to detect all internal and external APIs used in this codebase.
-            </p>
-          </div>
+          <EmptyState title="No APIs found yet">Scan the code to list its routes and the services it calls.</EmptyState>
         )}
         {apis.length > 0 && <ApiTable items={apis} />}
-      </div>
+      </PageBody>
     </div>
   )
 }

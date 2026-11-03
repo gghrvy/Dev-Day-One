@@ -43,15 +43,15 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const icons = { success: CheckCircle2, error: AlertCircle, info: Info }
   const colors = {
-    success: "border-emerald-500/20 text-emerald-400",
-    error: "border-red-500/20 text-red-400",
-    info: "border-indigo-500/20 text-indigo-400",
+    success: "border-l-route text-route",
+    error: "border-l-alert text-alert",
+    info: "border-l-signal text-signal",
   }
 
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+      <div role="status" aria-live="polite" className="fixed inset-x-4 bottom-4 z-50 flex flex-col items-end gap-2 sm:left-auto">
         <AnimatePresence>
           {toasts.map((t) => {
             const Icon = icons[t.type]
@@ -63,14 +63,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 exit={{ opacity: 0, x: 40, scale: 0.95 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
                 className={cn(
-                  "flex items-center gap-2.5 rounded-lg border bg-[#0C0C0E] px-3.5 py-2.5 shadow-xl",
+                  "flex max-w-sm items-start gap-2.5 rounded-[var(--radius-control)] border border-kerb border-l-2 bg-asphalt px-3.5 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.35)]",
                   colors[t.type]
                 )}
               >
-                <Icon className="h-3.5 w-3.5 shrink-0" />
-                <p className="text-[12px] text-zinc-200">{t.message}</p>
-                <button onClick={() => dismiss(t.id)} className="ml-1 text-zinc-600 hover:text-zinc-400">
-                  <X className="h-3 w-3" />
+                <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <p className="text-sm text-chalk">{t.message}</p>
+                <button onClick={() => dismiss(t.id)} aria-label="Dismiss" className="ml-1 rounded-[var(--radius-control)] p-0.5 text-fog hover:text-chalk">
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </motion.div>
             )

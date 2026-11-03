@@ -4,7 +4,7 @@
 
 Dev Day One is an AI-powered knowledge assistant for GitHub repositories. Connect a repo, index your code with a single click, then ask questions in natural language, explore architecture graphs, generate ADRs, detect code patterns, and analyze feature impact — all from a clean dark dashboard.
 
-![Next.js](https://img.shields.io/badge/Next.js_15-black?logo=next.js&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js_16-black?logo=next.js&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?logo=supabase&logoColor=white)
 ![Groq](https://img.shields.io/badge/Groq_LLaMA_3.3_70B-F55036?logo=groq&logoColor=white)
@@ -40,7 +40,7 @@ Dev Day One is an AI-powered knowledge assistant for GitHub repositories. Connec
 
 | Layer | Technology |
 |---|---|
-| Frontend | Next.js 15 (App Router), TypeScript, Tailwind CSS 4, Framer Motion |
+| Frontend | Next.js 16 (App Router), TypeScript, Tailwind CSS 4, Framer Motion |
 | UI Components | React Query, AI SDK v5 (`useChat`), React Flow (`@xyflow/react`) |
 | Backend | FastAPI, SQLAlchemy 2.0 async, asyncpg |
 | Database / Auth | Supabase (PostgreSQL + pgvector), GitHub OAuth, Google OAuth |
@@ -75,6 +75,25 @@ Dev Day One is an AI-powered knowledge assistant for GitHub repositories. Connec
 **Indexing pipeline:** GitHub repo → `github_parser` → `code_chunker` → `embeddings` (FastEmbed) → pgvector. Each file is chunked by logical boundaries, embedded, and stored for semantic retrieval.
 
 **Chat pipeline:** User message → vector similarity search → top-k chunks as context → Groq LLM → streamed response with `useChat`.
+
+---
+
+## Public demo mode
+
+The deployed demo runs with sample data and no accounts. The sample repository is Dev Day One's own source code, so every file it cites is real.
+
+Demo mode is enforced in the backend, not only by hiding buttons:
+
+- **Allow-list:** `backend/demo/guard.py` returns 403 for every method and path that isn't explicitly listed (the read-only pages, plus the Ask and Onboard chats).
+- **No external services:** `backend/demo/router.py` serves fixtures from `backend/demo/fixtures.py`. The database, Groq, GitHub and the embedding model are never loaded.
+- **Pre-recorded chat:** answers come from `backend/demo/answers.py`, with a per-visitor hourly limit (keyed on the last `X-Forwarded-For` entry), a global hourly cap, a 64 KB request limit and no saving.
+
+| Setting | Where | Default |
+|---|---|---|
+| `DEMO_MODE` | backend | On when running on Render, off locally |
+| `NEXT_PUBLIC_DEMO_MODE` | frontend | On in production builds, off in `next dev` |
+
+To run the real app in production, set both to `false` and provide the keys listed below.
 
 ---
 

@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
 import { Search, GitBranch, Settings, LayoutDashboard } from "lucide-react"
 import { apiFetch } from "@/lib/api/client"
+import { IS_DEMO } from "@/lib/demo"
 import { cn } from "@/lib/utils"
 import type { Repository } from "@/types"
 
@@ -32,7 +33,7 @@ export function CommandPalette() {
   const staticItems: Item[] = [
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { label: "Repositories", href: "/dashboard/repos", icon: GitBranch },
-    { label: "Settings", href: "/dashboard/settings", icon: Settings },
+    ...(IS_DEMO ? [] : [{ label: "Settings", href: "/dashboard/settings", icon: Settings }]),
   ]
 
   const repoItems: Item[] = repos.map((r) => ({
@@ -65,8 +66,6 @@ export function CommandPalette() {
     if (open) setTimeout(() => inputRef.current?.focus(), 50)
   }, [open])
 
-  useEffect(() => { setSelected(0) }, [query])
-
   const navigate = (href: string) => {
     router.push(href)
     setOpen(false)
@@ -87,7 +86,7 @@ export function CommandPalette() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 pt-[15vh]"
       onClick={() => setOpen(false)}
     >
       <motion.div
@@ -95,25 +94,30 @@ export function CommandPalette() {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -12, scale: 0.97 }}
         transition={{ duration: 0.18, ease: "easeOut" }}
-        className="w-full max-w-md overflow-hidden rounded-xl border border-white/[0.09] bg-[#0C0C0E] shadow-2xl"
+        role="dialog" aria-modal="true" aria-label="Jump to a page"
+        className="mx-4 w-full max-w-md overflow-hidden rounded-[var(--radius-panel)] border border-kerb bg-asphalt shadow-[0_12px_32px_rgba(0,0,0,0.45)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2.5 border-b border-white/[0.06] px-3.5 py-3">
-          <Search className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
+        <div className="flex items-center gap-2.5 border-b border-kerb px-4 py-3">
+          <Search className="size-4 shrink-0 text-fog" aria-hidden="true" />
           <input
             ref={inputRef}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value)
+              setSelected(0)
+            }}
             onKeyDown={handleKey}
             placeholder="Jump to…"
-            className="flex-1 bg-transparent text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none"
+            aria-label="Jump to"
+            className="flex-1 bg-transparent text-chalk placeholder:text-fog focus-visible:outline-none"
           />
-          <kbd className="rounded border border-white/[0.07] px-1.5 py-0.5 font-mono text-[9px] text-zinc-600">ESC</kbd>
+          <kbd className="rounded-[var(--radius-control)] border border-kerb px-1.5 py-0.5 text-xs text-fog">Esc</kbd>
         </div>
 
         <div className="max-h-72 overflow-y-auto py-1">
           {filtered.length === 0 && (
-            <p className="px-4 py-6 text-center text-sm text-zinc-600">No results.</p>
+            <p className="px-4 py-6 text-sm text-fog">Nothing matches. Try a repository name.</p>
           )}
           {filtered.map((item, i) => {
             const Icon = item.icon
@@ -122,22 +126,22 @@ export function CommandPalette() {
                 key={item.href}
                 onClick={() => navigate(item.href)}
                 className={cn(
-                  "flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors",
-                  i === selected ? "bg-white/[0.05] text-zinc-100" : "text-zinc-400 hover:bg-white/[0.03]"
+                  "flex w-full items-center gap-3 border-l-2 px-4 py-2.5 text-left",
+                  i === selected ? "border-signal bg-graphite text-chalk" : "border-transparent text-fog hover:bg-graphite"
                 )}
               >
-                <Icon className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
+                <Icon className="size-4 shrink-0 text-fog" aria-hidden="true" />
                 <div className="min-w-0">
-                  <p className="text-[13px]">{item.label}</p>
-                  {item.sub && <p className="truncate font-mono text-[10px] text-zinc-600">{item.sub}</p>}
+                  <p>{item.label}</p>
+                  {item.sub && <p className="truncate font-mono text-xs text-fog">{item.sub}</p>}
                 </div>
               </button>
             )
           })}
         </div>
 
-        <div className="border-t border-white/[0.04] px-3.5 py-2">
-          <p className="font-mono text-[9px] text-zinc-700">↑↓ navigate · Enter select · Esc close</p>
+        <div className="border-t border-kerb px-4 py-2">
+          <p className="text-xs text-fog">Arrow keys to move, Enter to open, Esc to close</p>
         </div>
       </motion.div>
     </motion.div>

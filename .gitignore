@@ -8,5 +8,6 @@ __pycache__/
 .env.local
 .env*.local
 .pytest_cache/
+.playwright-mcp/
 .DS_Store
 .superpowers/

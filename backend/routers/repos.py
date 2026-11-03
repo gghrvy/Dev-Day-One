@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Header, HTTPException
 from github import Github, UnknownObjectException
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth import get_current_user, get_owned_repo
@@ -39,14 +40,15 @@ async def connect_repo(
     except UnknownObjectException:
         raise HTTPException(404, "Repository not found on GitHub")
 
-    existing = await db.execute(
+    result = await db.execute(
         select(Repository).where(
             Repository.org_id == user.org_id,
             Repository.github_id == gh_repo.id,
         )
     )
-    if existing.scalar_one_or_none():
-        raise HTTPException(409, "Repository already connected")
+    existing = result.scalar_one_or_none()
+    if existing:
+        return existing
 
     repo = Repository(
         org_id=user.org_id,
@@ -58,7 +60,21 @@ async def connect_repo(
         is_private=gh_repo.private,
     )
     db.add(repo)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        # Race condition or cross-org conflict — return existing if we own it
+        result = await db.execute(
+            select(Repository).where(
+                Repository.org_id == user.org_id,
+                Repository.github_id == gh_repo.id,
+            )
+        )
+        existing = result.scalar_one_or_none()
+        if existing:
+            return existing
+        raise HTTPException(409, "This repository is already connected by another account")
     await db.refresh(repo)
     return repo
 

@@ -2,11 +2,13 @@
 
 import { use } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Cpu } from "lucide-react"
 import { apiFetch } from "@/lib/api/client"
+import { IS_DEMO } from "@/lib/demo"
 import { PageHeader } from "@/components/layout/page-header"
+import { PageBody, EmptyState } from "@/components/layout/page-body"
 import { PatternCard } from "@/components/patterns/pattern-card"
-import { SkeletonCards } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
+import { SkeletonList } from "@/components/ui/skeleton"
 import type { PatternDetection } from "@/types"
 
 export default function PatternsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -25,48 +27,41 @@ export default function PatternsPage({ params }: { params: Promise<{ id: string 
     },
   })
 
-  const action = (
-    <button
-      onClick={() => detect.mutate()}
-      disabled={detect.isPending}
-      className="flex items-center gap-1.5 rounded-md bg-indigo-500 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-indigo-400 disabled:opacity-50"
-    >
-      <Cpu className="h-3 w-3" />
-      {detect.isPending ? "Detecting…" : detection ? "Re-detect" : "Detect patterns"}
-    </button>
-  )
-
   return (
     <div>
       <PageHeader
-        title="Pattern Detection"
+        title="Patterns"
+        description="Design patterns found in the code, with the evidence for each."
         meta={detection ? `${detection.patterns.length} patterns found` : undefined}
-        action={action}
+        action={
+          !IS_DEMO && (
+            <Button onClick={() => detect.mutate()} disabled={detect.isPending}>
+              {detect.isPending ? "Detecting…" : detection ? "Detect again" : "Detect patterns"}
+            </Button>
+          )
+        }
       />
-      <div className="px-5 py-5">
-        {isLoading && <SkeletonCards count={4} />}
-
+      <PageBody>
+        {isLoading && <SkeletonList rows={4} />}
         {!isLoading && !detection && (
-          <div className="py-10 text-center">
-            <Cpu className="mx-auto mb-3 h-8 w-8 text-zinc-700" />
-            <p className="text-sm text-zinc-600">No patterns detected yet. Click &quot;Detect patterns&quot; to analyze this codebase.</p>
+          <EmptyState title="No patterns detected yet">Run detection to analyse how this codebase is organised.</EmptyState>
+        )}
+        {detection && (
+          <div className="grid gap-10 xl:grid-cols-12">
+            <ul className="xl:col-span-8">
+              {detection.patterns.map((p) => <PatternCard key={p.name} pattern={p} />)}
+            </ul>
+            {detection.raw_analysis && (
+              <section aria-labelledby="summary-title" className="xl:col-span-4">
+                <h2 id="summary-title" className="text-[1.25rem] font-bold text-chalk">Summary</h2>
+                <div className="mt-3 space-y-3 text-fog">
+                  {detection.raw_analysis.split(/\n{2,}/).map((para, i) => <p key={i}>{para}</p>)}
+                </div>
+              </section>
+            )}
           </div>
         )}
-
-        {detection && (
-          <>
-            {detection.raw_analysis && (
-              <div className="mb-6 rounded-xl border border-white/[0.06] bg-[#0C0C0E] p-5">
-                <p className="mb-1 font-mono text-[10px] uppercase tracking-widest text-zinc-600">Analysis</p>
-                <p className="text-sm leading-relaxed text-zinc-400">{detection.raw_analysis}</p>
-              </div>
-            )}
-            <div className="grid gap-3 sm:grid-cols-2">
-              {detection.patterns.map((p) => <PatternCard key={p.name} pattern={p} />)}
-            </div>
-          </>
-        )}
-      </div>
+      </PageBody>
     </div>
   )
 }

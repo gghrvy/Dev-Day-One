@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { GitBranch, Mail, LogOut, User, Check, Pencil } from "lucide-react"
+import { User } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { PageHeader } from "@/components/layout/page-header"
+import { PageBody } from "@/components/layout/page-body"
+import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/toast"
 import { Modal } from "@/components/ui/modal"
 
@@ -57,142 +59,81 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-8">
-      <PageHeader title="Settings" meta="Account & preferences" />
-
-      <div className="mt-6 space-y-4">
-        {/* Profile */}
-        <Section title="Profile">
-          <div className="flex items-center gap-4 p-5">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1C1C1F]">
+    <div>
+      <PageHeader title="Settings" description="Your profile and how you sign in." />
+      <PageBody className="max-w-[48rem] space-y-10">
+        <section aria-labelledby="profile-title">
+          <h2 id="profile-title" className="text-[1.25rem] font-bold text-chalk">Profile</h2>
+          <div className="mt-3 flex items-center gap-4 border-y border-kerb py-4">
+            <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-asphalt">
               {profile?.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={profile.avatar_url} alt="avatar" className="h-full w-full object-cover" />
+                <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
               ) : (
-                <User className="h-4 w-4 text-zinc-600" />
+                <User className="size-5 text-fog" aria-hidden="true" />
               )}
             </div>
             <div className="min-w-0 flex-1">
               {editingName ? (
-                <div className="flex items-center gap-2">
+                <form onSubmit={(e) => { e.preventDefault(); saveName() }} className="flex flex-wrap items-center gap-2">
+                  <label htmlFor="settings-name" className="sr-only">Name</label>
                   <input
+                    id="settings-name"
                     autoFocus
                     value={nameInput}
                     onChange={(e) => setNameInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") setEditingName(false) }}
-                    className="flex-1 rounded-md border border-white/[0.08] bg-white/[0.03] px-2 py-1 text-sm text-zinc-200 focus:outline-none focus:border-white/[0.15]"
+                    onKeyDown={(e) => { if (e.key === "Escape") setEditingName(false) }}
+                    className="min-w-0 flex-1 rounded-[var(--radius-control)] border border-kerb bg-asphalt px-3 py-2 text-chalk focus-visible:border-signal"
                   />
-                  <button onClick={saveName} disabled={savingName} className="text-emerald-400 hover:text-emerald-300 disabled:opacity-50">
-                    <Check className="h-4 w-4" />
-                  </button>
-                </div>
+                  <Button type="submit" size="sm" disabled={savingName}>{savingName ? "Saving…" : "Save name"}</Button>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setEditingName(false)}>Cancel</Button>
+                </form>
               ) : (
-                <div className="flex items-center gap-2">
-                  <p className="truncate text-sm font-semibold text-zinc-200">{profile?.full_name ?? "—"}</p>
-                  <button onClick={() => setEditingName(true)} className="text-zinc-600 hover:text-zinc-400">
-                    <Pencil className="h-3 w-3" />
-                  </button>
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="truncate font-bold text-chalk">{profile?.full_name ?? "No name set"}</p>
+                  <Button variant="link" size="sm" onClick={() => setEditingName(true)}>Change name</Button>
                 </div>
               )}
-              <p className="truncate font-mono text-[11px] text-zinc-600">{profile?.email ?? "—"}</p>
+              <p className="truncate text-fog">{profile?.email ?? ""}</p>
             </div>
           </div>
-        </Section>
+        </section>
 
-        {/* Connected accounts */}
-        <Section title="Connected accounts">
-          <div className="divide-y divide-white/[0.04]">
-            <AccountRow
-              icon={GitBranch}
-              label="GitHub"
-              connected={profile?.provider === "github"}
-            />
-            <AccountRow
-              icon={Mail}
-              label="Google"
-              connected={profile?.provider === "google"}
-            />
-            <AccountRow
-              icon={Mail}
-              label="Email / Password"
-              connected={profile?.provider === "email"}
-            />
-          </div>
-        </Section>
+        <section aria-labelledby="signin-title">
+          <h2 id="signin-title" className="text-[1.25rem] font-bold text-chalk">How you sign in</h2>
+          <ul className="mt-3">
+            {[
+              ["GitHub", "github"],
+              ["Google", "google"],
+              ["Email and password", "email"],
+            ].map(([label, provider]) => (
+              <li key={provider} className="flex items-center justify-between border-b border-kerb py-3 first:border-t">
+                <span className="text-chalk">{label}</span>
+                <span className={profile?.provider === provider ? "text-route" : "text-fog"}>
+                  {profile?.provider === provider ? "Connected" : "Not connected"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
 
-        {/* Danger zone */}
-        <Section title="Account">
-          <div className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-zinc-300">Sign out</p>
-                <p className="text-[11px] text-zinc-600">Sign out of your account on this device.</p>
-              </div>
-              <button
-                onClick={() => setShowSignOut(true)}
-                className="flex items-center gap-1.5 rounded-md border border-red-500/20 px-3 py-1.5 text-[11px] text-red-400 hover:border-red-500/40 hover:text-red-300"
-              >
-                <LogOut className="h-3 w-3" />
-                Sign out
-              </button>
-            </div>
-          </div>
-        </Section>
-      </div>
+        <section aria-labelledby="account-title">
+          <h2 id="account-title" className="text-[1.25rem] font-bold text-chalk">Sign out</h2>
+          <p className="mt-1 text-fog">Sign out of Dev Day One on this device.</p>
+          <Button variant="destructive" className="mt-3" onClick={() => setShowSignOut(true)}>Sign out</Button>
+        </section>
+      </PageBody>
 
       <Modal open={showSignOut} onClose={() => setShowSignOut(false)}>
-        <div className="w-80 rounded-xl border border-white/[0.08] bg-[#0C0C0E] p-5 shadow-2xl">
-          <p className="mb-1 text-sm font-semibold text-zinc-100">Sign out?</p>
-          <p className="mb-5 text-[12px] text-zinc-500">You'll need to sign in again to access your repositories.</p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowSignOut(false)}
-              className="flex-1 rounded-md border border-white/[0.07] py-1.5 text-[11px] text-zinc-400 hover:text-zinc-200"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={signOut}
-              className="flex-1 rounded-md bg-red-500/10 py-1.5 text-[11px] font-semibold text-red-400 hover:bg-red-500/20"
-            >
-              Sign out
-            </button>
+        <div role="dialog" aria-modal="true" aria-labelledby="so-title" className="w-[min(22rem,calc(100vw-2rem))] rounded-[var(--radius-panel)] border border-kerb bg-asphalt p-5">
+          <p id="so-title" className="font-bold text-chalk">Sign out?</p>
+          <p className="mt-1 text-sm text-fog">You&apos;ll need to sign in again to see your repositories.</p>
+          <div className="mt-5 flex justify-end gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setShowSignOut(false)}>Cancel</Button>
+            <Button variant="destructive" size="sm" onClick={signOut}>Sign out</Button>
           </div>
         </div>
       </Modal>
-    </div>
-  )
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-xl border border-white/[0.06] bg-[#0C0C0E]">
-      <div className="border-b border-white/[0.04] px-5 py-3">
-        <p className="font-mono text-[10px] uppercase tracking-widest text-zinc-600">{title}</p>
-      </div>
-      {children}
-    </div>
-  )
-}
-
-function AccountRow({
-  icon: Icon,
-  label,
-  connected,
-}: {
-  icon: React.ElementType
-  label: string
-  connected: boolean
-}) {
-  return (
-    <div className="flex items-center justify-between px-5 py-3">
-      <div className="flex items-center gap-2.5">
-        <Icon className="h-3.5 w-3.5 text-zinc-500" />
-        <span className="text-[12px] text-zinc-300">{label}</span>
-      </div>
-      <span className={`font-mono text-[10px] ${connected ? "text-emerald-400" : "text-zinc-700"}`}>
-        {connected ? "connected" : "not connected"}
-      </span>
     </div>
   )
 }

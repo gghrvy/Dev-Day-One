@@ -1,22 +1,21 @@
 import Link from "next/link"
+import { LogoMark } from "@/components/ui/logo-mark"
+import { SkipLink } from "@/components/layout/skip-link"
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-[#09090B] text-zinc-200">
-      <div className="mx-auto max-w-2xl px-6 py-16">
-        <div className="mb-8">
-          <Link href="/login" className="font-mono text-[11px] text-zinc-600 hover:text-zinc-400">← Back</Link>
-        </div>
+    <div className="min-h-screen">
+      <SkipLink />
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[68ch] px-5 py-12 md:py-16">
+        <Link href="/" className="mb-10 inline-flex min-h-11 items-center gap-2.5 rounded-[var(--radius-control)]">
+          <LogoMark size={26} />
+          <span className="font-extrabold text-chalk">Dev Day One</span>
+        </Link>
 
-        <div className="mb-8 flex items-center gap-2.5">
-          <div className="flex h-[22px] w-[22px] items-center justify-center rounded-[5px] bg-amber-500 text-[11px] font-black text-zinc-900">D</div>
-          <span className="text-sm font-semibold text-zinc-100">Dev Day One</span>
-        </div>
+        <h1 className="mb-2 text-[2.4414rem] font-extrabold text-chalk">Terms of Service</h1>
+        <p className="mb-10 text-sm text-fog">Last updated: June 13, 2026</p>
 
-        <h1 className="mb-2 text-2xl font-extrabold tracking-tight text-zinc-50">Terms of Service</h1>
-        <p className="mb-10 font-mono text-[11px] text-zinc-600">Last updated: June 13, 2026</p>
-
-        <div className="space-y-8 text-sm leading-relaxed text-zinc-400">
+        <div className="space-y-8 text-fog">
           <Section title="1. Acceptance of Terms">
             By accessing or using Dev Day One, you agree to be bound by these Terms of Service. If you do not agree, do not use the service.
           </Section>
@@ -54,10 +53,10 @@ export default function TermsPage() {
           </Section>
 
           <Section title="10. Contact">
-            For questions about these terms, contact us at <a href="mailto:ggtempestt@gmail.com" className="text-amber-500 hover:text-amber-400">ggtempestt@gmail.com</a>.
+            For questions about these terms, contact us at <a href="mailto:ggtempestt@gmail.com" className="text-route underline underline-offset-4">ggtempestt@gmail.com</a>.
           </Section>
         </div>
-      </div>
+      </main>
     </div>
   )
 }
@@ -65,7 +64,7 @@ export default function TermsPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="mb-2 text-[13px] font-semibold text-zinc-200">{title}</h2>
+      <h2 className="mb-2 text-[1.25rem] font-bold text-chalk">{title}</h2>
       <p>{children}</p>
     </div>
   )

@@ -1,3 +1,6 @@
+from datetime import datetime
+from uuid import UUID
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -28,3 +31,13 @@ def last_user_text(messages: list[UIMessage]) -> str:
             if text:
                 return text
     raise ValueError("No user message with text parts found")
+
+
+class ChatMessageResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    role: str
+    content: str
+    sources: list
+    mode: str
+    created_at: datetime

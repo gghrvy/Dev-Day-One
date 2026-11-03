@@ -1,7 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
+import { LogoMark } from "@/components/ui/logo-mark"
 
 function GithubIcon({ className }: { className?: string }) {
   return (
@@ -77,63 +79,36 @@ export default function LoginPage() {
     else setInfo("Check your email for a confirmation link.")
   }
 
+  const fieldCls = "w-full rounded-[var(--radius-control)] border border-kerb bg-asphalt px-3 py-2.5 text-chalk placeholder:text-fog hover:border-zinc-700 focus-visible:border-signal"
+
   return (
-    <main className="flex min-h-screen bg-[#09090B]">
-      {/* Left brand panel */}
-      <div className="relative hidden flex-col justify-between bg-[#0C0C0E] p-12 lg:flex lg:w-[45%]">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-[22px] w-[22px] items-center justify-center rounded-[5px] bg-amber-500 text-[11px] font-black text-zinc-900">D</div>
-          <span className="text-sm font-semibold tracking-tight text-zinc-100">Dev Day One</span>
-        </div>
-        <div>
-          <blockquote className="text-xl font-extrabold leading-snug tracking-tighter text-zinc-50">
-            "Every developer,<br />
-            <span className="text-amber-400">ready from day one."</span>
-          </blockquote>
-          <p className="mt-4 text-sm leading-relaxed text-zinc-500">
-            Connect your codebase and give every new hire an AI that actually knows your system — so they ship in days, not weeks.
+    <main className="min-h-screen">
+      <div className="mx-auto grid min-h-screen max-w-[1200px] gap-12 px-5 py-10 md:px-8 lg:grid-cols-12 lg:items-center">
+        <div className="lg:col-span-6">
+          <Link href="/" className="inline-flex items-center gap-2.5 rounded-[var(--radius-control)]">
+            <LogoMark size={26} />
+            <span className="font-extrabold text-chalk">Dev Day One</span>
+          </Link>
+          <p className="mt-10 max-w-[20ch] text-[2.4414rem] font-extrabold leading-[1.05] text-chalk">
+            Your first day on a codebase, already oriented.
+          </p>
+          <p className="mt-4 max-w-[52ch] text-fog">
+            Connect a repository and ask it questions. Every answer cites the files it came from.
           </p>
         </div>
-        <div className="flex items-center gap-6">
-          {[{ value: "< 60s", label: "to index" }, { value: "100%", label: "code-grounded" }, { value: "$0", label: "to start" }].map((stat) => (
-            <div key={stat.label}>
-              <div className="font-mono text-base font-bold text-zinc-100">{stat.value}</div>
-              <div className="text-[11px] text-zinc-600">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_100%,rgba(245,158,11,0.04),transparent)]" />
-      </div>
 
-      {/* Right sign-in panel */}
-      <div className="flex flex-1 flex-col items-center justify-center px-6">
-        <div className="w-full max-w-[340px]">
-          {/* Mobile logo */}
-          <div className="mb-8 flex items-center gap-2.5 lg:hidden">
-            <div className="flex h-[22px] w-[22px] items-center justify-center rounded-[5px] bg-amber-500 text-[11px] font-black text-zinc-900">D</div>
-            <span className="text-sm font-semibold tracking-tight text-zinc-100">Dev Day One</span>
-          </div>
+        <div className="w-full max-w-[380px] lg:col-span-5 lg:col-start-8">
+          <h1 className="text-[1.5625rem] font-extrabold text-chalk">{tab === "signup" ? "Create an account" : "Sign in"}</h1>
 
-          <h2 className="text-lg font-extrabold tracking-tight text-zinc-50">
-            {tab === "signup" ? "Create account" : "Sign in"}
-          </h2>
-          <p className="mt-1.5 text-sm text-zinc-500">
-            {tab === "signup" ? "Start onboarding your team faster." : "Welcome back."}
-          </p>
-
-          {/* Tab selector */}
-          <div className="mt-6 flex rounded-lg border border-white/[0.06] bg-white/[0.02] p-1">
+          <div role="group" aria-label="Sign-in method" className="mt-6 grid grid-cols-3 gap-1 rounded-[var(--radius-control)] border border-kerb p-1">
             {(["oauth", "signin", "signup"] as Tab[]).map((t) => (
               <button
                 key={t}
+                aria-pressed={tab === t}
                 onClick={() => { setTab(t); setError(""); setInfo("") }}
-                className={`flex-1 rounded-md py-1.5 text-[11px] font-semibold transition-colors ${
-                  tab === t
-                    ? "bg-white/[0.07] text-zinc-100"
-                    : "text-zinc-600 hover:text-zinc-400"
-                }`}
+                className={`rounded-[var(--radius-control)] py-2 text-sm font-semibold ${tab === t ? "bg-asphalt text-chalk" : "text-fog hover:text-chalk"}`}
               >
-                {t === "oauth" ? "Social" : t === "signin" ? "Sign in" : "Sign up"}
+                {t === "oauth" ? "GitHub or Google" : t === "signin" ? "Email" : "New account"}
               </button>
             ))}
           </div>
@@ -141,111 +116,58 @@ export default function LoginPage() {
           <div className="mt-6 space-y-3">
             {tab === "oauth" && (
               <>
-                <button
-                  onClick={signInWithGitHub}
-                  className="flex w-full items-center justify-center gap-2.5 rounded-md bg-zinc-50 px-4 py-2.5 text-sm font-semibold text-zinc-900 transition-colors hover:bg-zinc-100"
-                >
+                <button onClick={signInWithGitHub} className="flex h-11 w-full items-center justify-center gap-2.5 rounded-[var(--radius-control)] bg-chalk font-semibold text-graphite hover:bg-zinc-200">
                   <GithubIcon className="h-4 w-4" />
                   Continue with GitHub
                 </button>
-                <button
-                  onClick={signInWithGoogle}
-                  className="flex w-full items-center justify-center gap-2.5 rounded-md border border-white/[0.08] bg-white/[0.03] px-4 py-2.5 text-sm font-semibold text-zinc-200 transition-colors hover:bg-white/[0.06]"
-                >
+                <button onClick={signInWithGoogle} className="flex h-11 w-full items-center justify-center gap-2.5 rounded-[var(--radius-control)] border border-kerb font-semibold text-chalk hover:border-fog">
                   <GoogleIcon className="h-4 w-4" />
                   Continue with Google
                 </button>
+                <p className="text-sm text-fog">Sign in with GitHub to connect private repositories.</p>
               </>
             )}
 
-            {tab === "signin" && (
-              <form onSubmit={signInWithEmail} className="space-y-3">
+            {tab !== "oauth" && (
+              <form onSubmit={tab === "signin" ? signInWithEmail : signUpWithEmail} className="space-y-4">
+                {tab === "signup" && (
+                  <div>
+                    <label htmlFor="login-name" className="block font-bold text-chalk">Name</label>
+                    <input id="login-name" type="text" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} className={`mt-2 ${fieldCls}`} />
+                  </div>
+                )}
                 <div>
-                  <label className="mb-1.5 block font-mono text-[10px] uppercase tracking-widest text-zinc-600">Email</label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-md border border-white/[0.07] bg-[#0C0C0E] px-3.5 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-700 focus:border-white/[0.15] focus:outline-none"
-                    placeholder="you@company.com"
-                  />
+                  <label htmlFor="login-email" className="block font-bold text-chalk">Email</label>
+                  <input id="login-email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={`mt-2 ${fieldCls}`} />
                 </div>
                 <div>
-                  <label className="mb-1.5 block font-mono text-[10px] uppercase tracking-widest text-zinc-600">Password</label>
+                  <label htmlFor="login-password" className="block font-bold text-chalk">Password</label>
+                  {tab === "signup" && <p id="pw-hint" className="text-sm text-fog">At least 8 characters.</p>}
                   <input
+                    id="login-password"
                     type="password"
                     required
+                    minLength={tab === "signup" ? 8 : undefined}
+                    aria-describedby={tab === "signup" ? "pw-hint" : undefined}
+                    autoComplete={tab === "signup" ? "new-password" : "current-password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-md border border-white/[0.07] bg-[#0C0C0E] px-3.5 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-700 focus:border-white/[0.15] focus:outline-none"
-                    placeholder="••••••••"
+                    className={`mt-2 ${fieldCls}`}
                   />
                 </div>
-                {error && <p className="text-xs text-red-400">{error}</p>}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full rounded-md bg-amber-500 py-2.5 text-sm font-semibold text-zinc-900 hover:bg-amber-400 disabled:opacity-50"
-                >
-                  {loading ? "Signing in…" : "Sign in"}
-                </button>
-              </form>
-            )}
-
-            {tab === "signup" && (
-              <form onSubmit={signUpWithEmail} className="space-y-3">
-                <div>
-                  <label className="mb-1.5 block font-mono text-[10px] uppercase tracking-widest text-zinc-600">Name</label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full rounded-md border border-white/[0.07] bg-[#0C0C0E] px-3.5 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-700 focus:border-white/[0.15] focus:outline-none"
-                    placeholder="Your name"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1.5 block font-mono text-[10px] uppercase tracking-widest text-zinc-600">Email</label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-md border border-white/[0.07] bg-[#0C0C0E] px-3.5 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-700 focus:border-white/[0.15] focus:outline-none"
-                    placeholder="you@company.com"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1.5 block font-mono text-[10px] uppercase tracking-widest text-zinc-600">Password</label>
-                  <input
-                    type="password"
-                    required
-                    minLength={8}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-md border border-white/[0.07] bg-[#0C0C0E] px-3.5 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-700 focus:border-white/[0.15] focus:outline-none"
-                    placeholder="Min 8 characters"
-                  />
-                </div>
-                {error && <p className="text-xs text-red-400">{error}</p>}
-                {info && <p className="text-xs text-emerald-400">{info}</p>}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full rounded-md bg-amber-500 py-2.5 text-sm font-semibold text-zinc-900 hover:bg-amber-400 disabled:opacity-50"
-                >
-                  {loading ? "Creating account…" : "Create account"}
+                {error && <p role="alert" className="text-alert">{error}</p>}
+                {info && <p role="status" className="text-route">{info}</p>}
+                <button type="submit" disabled={loading} className="h-11 w-full rounded-[var(--radius-control)] bg-signal font-semibold text-signal-ink hover:bg-[#F5D05E] disabled:opacity-50">
+                  {tab === "signin" ? (loading ? "Signing in…" : "Sign in") : loading ? "Creating account…" : "Create account"}
                 </button>
               </form>
             )}
           </div>
 
-          <p className="mt-6 text-center text-[11px] text-zinc-600">
-            By continuing, you agree to our{" "}
-            <a href="/terms" className="underline underline-offset-2 hover:text-zinc-400">Terms</a>{" "}
-            and{" "}
-            <a href="/privacy" className="underline underline-offset-2 hover:text-zinc-400">Privacy Policy</a>.
+          <p className="mt-6 text-sm text-fog">
+            By continuing you agree to the{" "}
+            <Link href="/terms" className="text-chalk underline underline-offset-4">Terms</Link> and{" "}
+            <Link href="/privacy" className="text-chalk underline underline-offset-4">Privacy Policy</Link>.
           </p>
         </div>
       </div>

@@ -3,13 +3,26 @@
 import { use, useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
-import { Trash2 } from "lucide-react"
 import { apiFetch } from "@/lib/api/client"
+import { IS_DEMO } from "@/lib/demo"
+import { formatDate } from "@/lib/format"
 import { PageHeader } from "@/components/layout/page-header"
+import { PageBody, EmptyState } from "@/components/layout/page-body"
+import { repoHref } from "@/components/layout/nav-data"
+import { RouteLine, RouteStation } from "@/components/route/route-line"
 import { IndexingProgress } from "@/components/repos/indexing-progress"
+import { Button } from "@/components/ui/button"
+import { SkeletonText } from "@/components/ui/skeleton"
 import { useToast } from "@/components/ui/toast"
 import { Modal } from "@/components/ui/modal"
 import type { Repository } from "@/types"
+
+const SUGGESTED_ROUTE = [
+  { segment: "ask", title: "Ask a question", body: "Start with where requests are authenticated, then follow the cited files." },
+  { segment: "architecture", title: "Look at the architecture", body: "See the main parts and which ones call each other." },
+  { segment: "adrs", title: "Read the decisions", body: "Why the code is built the way it is." },
+  { segment: "impact", title: "Check a change before making it", body: "Which files a proposed change would touch." },
+]
 
 export default function RepoOverviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -30,101 +43,82 @@ export default function RepoOverviewPage({ params }: { params: Promise<{ id: str
       toast("Repository removed.", "success")
       router.push("/dashboard/repos")
     },
-    onError: () => toast("Failed to delete repository.", "error"),
   })
 
   if (isLoading) {
     return (
-      <div className="space-y-4 px-5 pt-5">
-        <div className="h-5 w-48 rounded bg-zinc-800" />
-        <div className="h-3 w-64 rounded bg-zinc-800" />
-      </div>
+      <PageBody>
+        <SkeletonText lines={3} />
+      </PageBody>
     )
   }
 
   if (!repo) {
     return (
-      <div className="px-5 pt-5">
-        <p className="text-sm text-zinc-500">Repository not found.</p>
-      </div>
+      <PageBody>
+        <EmptyState title="This repository isn't available">Pick one from All repositories.</EmptyState>
+      </PageBody>
     )
   }
-
-  const indexedAtMeta = repo.indexed_at
-    ? `indexed ${new Date(repo.indexed_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
-    : undefined
 
   return (
     <div>
       <PageHeader
         title={repo.name}
-        meta={indexedAtMeta}
+        description={repo.description ?? undefined}
         action={
-          <button
-            onClick={() => setShowDelete(true)}
-            className="flex items-center gap-1.5 rounded-md border border-red-500/20 px-2.5 py-1.5 text-[11px] text-red-400 hover:border-red-500/40 hover:text-red-300"
-          >
-            <Trash2 className="h-3 w-3" />
-            Remove
-          </button>
+          !IS_DEMO && (
+            <Button variant="destructive" size="sm" onClick={() => setShowDelete(true)}>
+              Remove repository
+            </Button>
+          )
         }
       />
 
-      <div className="px-5 py-5 space-y-6">
-        {/* Status block */}
-        <div className="grid grid-cols-2 gap-px bg-white/[0.04] sm:grid-cols-3">
-          <div className="bg-dawn-bg px-4 py-3">
-            <div className="font-mono text-[10px] text-zinc-600">Status</div>
-            <div className="mt-1 flex items-center gap-1.5">
-              <div className={`h-1.5 w-1.5 rounded-full ${repo.indexed ? "bg-emerald-500" : "bg-zinc-600"}`} />
-              <span className={`font-mono text-[12px] ${repo.indexed ? "text-emerald-400" : "text-zinc-500"}`}>
-                {repo.indexed ? "Indexed" : "Not indexed"}
-              </span>
+      <PageBody className="grid gap-10 lg:grid-cols-12">
+        <dl className="lg:col-span-5">
+          {[
+            ["Repository", <span key="r" className="font-mono text-[0.9375rem]">{repo.full_name}</span>],
+            ["Status", <span key="s" className={repo.indexed ? "text-route" : "text-fog"}>{repo.indexed ? "Indexed, ready for questions" : "Not indexed yet"}</span>],
+            ["Last indexed", repo.indexed_at ? formatDate(repo.indexed_at) : "Never"],
+          ].map(([label, value]) => (
+            <div key={label as string} className="grid grid-cols-[8rem_1fr] gap-4 border-b border-kerb py-3 first:border-t">
+              <dt className="text-fog">{label}</dt>
+              <dd className="min-w-0 break-words text-chalk">{value}</dd>
             </div>
-          </div>
-
-          <div className="bg-dawn-bg px-4 py-3">
-            <div className="font-mono text-[10px] text-zinc-600">Repository</div>
-            <div className="mt-1 font-mono text-[12px] text-zinc-300 truncate">{repo.full_name}</div>
-          </div>
-
-          {repo.indexed_at && (
-            <div className="bg-dawn-bg px-4 py-3">
-              <div className="font-mono text-[10px] text-zinc-600">Last indexed</div>
-              <div className="mt-1 font-mono text-[12px] text-zinc-300">
-                {new Date(repo.indexed_at).toLocaleDateString()}
-              </div>
+          ))}
+          {!IS_DEMO && (
+            <div className="mt-6">
+              <IndexingProgress repoId={repo.id} indexed={repo.indexed} />
             </div>
           )}
-        </div>
+        </dl>
 
-        {repo.description && (
-          <p className="text-sm text-zinc-500 leading-relaxed">{repo.description}</p>
-        )}
-
-        <IndexingProgress repoId={repo.id} indexed={repo.indexed} />
-      </div>
+        <section aria-labelledby="route-title" className="lg:col-span-7">
+          <h2 id="route-title" className="text-[1.25rem] font-bold text-chalk">
+            Suggested route through this repo
+          </h2>
+          <RouteLine className="mt-5" aria-label="Suggested pages to visit">
+            {SUGGESTED_ROUTE.map((s, i) => (
+              <RouteStation key={s.segment} index={i} tone="muted" title={s.title} href={repoHref(repo.id, s.segment)}>
+                {s.body}
+              </RouteStation>
+            ))}
+          </RouteLine>
+        </section>
+      </PageBody>
 
       <Modal open={showDelete} onClose={() => setShowDelete(false)}>
-        <div className="w-80 rounded-xl border border-white/[0.08] bg-[#0C0C0E] p-5 shadow-2xl">
-          <p className="mb-1 text-sm font-semibold text-zinc-100">Remove repository?</p>
-          <p className="mb-5 text-[12px] text-zinc-500">
-            This will remove <span className="font-mono text-zinc-400">{repo.full_name}</span> and all its indexed data. This cannot be undone.
+        <div role="dialog" aria-modal="true" aria-labelledby="remove-title" className="w-[min(22rem,calc(100vw-2rem))] rounded-[var(--radius-panel)] border border-kerb bg-asphalt p-5">
+          <p id="remove-title" className="font-bold text-chalk">Remove this repository?</p>
+          <p className="mt-1 text-sm text-fog">
+            This deletes <span className="font-mono">{repo.full_name}</span> and everything indexed from it. It can&apos;t be undone.
           </p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowDelete(false)}
-              className="flex-1 rounded-md border border-white/[0.07] py-1.5 text-[11px] text-zinc-400 hover:text-zinc-200"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => deleteRepo.mutate()}
-              disabled={deleteRepo.isPending}
-              className="flex-1 rounded-md bg-red-500/10 py-1.5 text-[11px] font-semibold text-red-400 hover:bg-red-500/20 disabled:opacity-50"
-            >
-              {deleteRepo.isPending ? "Removing…" : "Remove"}
-            </button>
+          <div className="mt-5 flex justify-end gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setShowDelete(false)}>Cancel</Button>
+            <Button variant="destructive" size="sm" onClick={() => deleteRepo.mutate()} disabled={deleteRepo.isPending}>
+              {deleteRepo.isPending ? "Removing…" : "Remove repository"}
+            </Button>
           </div>
         </div>
       </Modal>

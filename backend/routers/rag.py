@@ -1,31 +1,19 @@
-from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy import delete as sql_delete
-from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth import get_current_user, get_owned_repo
 from database import get_db
 from models import ChatMessage, User
-from schemas.chat import ChatRequest, last_user_text
+from schemas.chat import ChatMessageResponse, ChatRequest, last_user_text
 from services.ai_stream import to_ai_sdk_sse
 from services.rag import ASK_SYSTEM_PROMPT, ONBOARD_SYSTEM_PROMPT, answer_question
 
 router = APIRouter(prefix="/repos", tags=["ai"])
-
-
-class ChatMessageResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    id: UUID
-    role: str
-    content: str
-    sources: list
-    mode: str
-    created_at: datetime
 
 
 @router.get("/{repo_id}/messages", response_model=list[ChatMessageResponse])

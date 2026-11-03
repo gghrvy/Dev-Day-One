@@ -2,26 +2,25 @@ import { cn } from "@/lib/utils"
 
 interface PageHeaderProps {
   title: string
+  /** One sentence saying what this page shows. */
+  description?: string
+  /** Short factual metadata, e.g. "12 runs". */
   meta?: string
   action?: React.ReactNode
   className?: string
 }
 
-export function PageHeader({ title, meta, action, className }: PageHeaderProps) {
+export function PageHeader({ title, description, meta, action, className }: PageHeaderProps) {
   return (
-    <div className={cn("px-5 pt-5", className)}>
-      <div className="flex items-end justify-between">
-        <div>
-          <h1 className="text-xl font-extrabold tracking-tighter text-dawn-text">{title}</h1>
-          {meta && (
-            <p className="mt-1 font-mono text-[9px] text-dawn-muted">{meta}</p>
-          )}
+    <header className={cn("border-b border-kerb px-5 pb-5 pt-6 md:px-8", className)}>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0 max-w-[68ch]">
+          <h1 className="text-[1.5625rem] font-extrabold text-chalk">{title}</h1>
+          {description && <p className="mt-1.5 text-fog">{description}</p>}
+          {meta && <p className="mt-1 text-sm text-fog">{meta}</p>}
         </div>
-        {action && <div className="mb-0.5">{action}</div>}
+        {action && <div className="flex shrink-0 items-center gap-2">{action}</div>}
       </div>
-      <div className="relative mt-4 h-px w-full bg-dawn-border">
-        <div className="absolute left-0 top-0 h-px w-8 bg-dawn-accent" />
-      </div>
-    </div>
+    </header>
   )
 }

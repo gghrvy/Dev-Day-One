@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Copy, Check } from "lucide-react"
 
 export function CodeBlock({ code, language }: { code: string; language?: string }) {
   const [copied, setCopied] = useState(false)
@@ -13,21 +12,30 @@ export function CodeBlock({ code, language }: { code: string; language?: string 
   }
 
   return (
-    <div className="group relative my-2 overflow-hidden rounded-lg border border-white/[0.07] bg-[#080809]">
-      <div className="flex items-center justify-between border-b border-white/[0.05] px-3 py-1.5">
-        <span className="font-mono text-[10px] text-zinc-600">{language || "code"}</span>
-        <button
-          onClick={copy}
-          className="flex items-center gap-1 text-zinc-700 transition-colors hover:text-zinc-400"
-        >
-          {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
-          <span className="font-mono text-[9px]">{copied ? "copied" : "copy"}</span>
+    <div className="my-3 overflow-hidden rounded-[var(--radius-panel)] border border-kerb bg-asphalt">
+      <div className="flex items-center justify-between border-b border-kerb px-4 py-2 text-sm text-fog">
+        <span>{language || "Code"}</span>
+        <button onClick={copy} className="rounded-[var(--radius-control)] px-1 hover:text-chalk">
+          {copied ? "Copied" : "Copy"}
         </button>
       </div>
-      <pre className="overflow-x-auto p-3">
-        <code className="font-mono text-[12px] leading-relaxed text-zinc-300">{code}</code>
+      <pre className="overflow-x-auto p-4">
+        <code className="font-mono text-[0.875rem] leading-relaxed text-chalk">{code}</code>
       </pre>
     </div>
+  )
+}
+
+/** Inline `code` spans become monospace; everything else stays plain text. */
+function renderInline(text: string, keyBase: string): React.ReactNode[] {
+  return text.split(/(`[^`\n]+`)/g).map((piece, i) =>
+    piece.startsWith("`") && piece.endsWith("`") && piece.length > 2 ? (
+      <code key={`${keyBase}-${i}`} className="break-words font-mono text-[0.9em] text-chalk">
+        {piece.slice(1, -1)}
+      </code>
+    ) : (
+      piece
+    )
   )
 }
 
@@ -37,29 +45,24 @@ export function renderMessageContent(text: string): React.ReactNode[] {
   let lastIndex = 0
   let match
 
-  while ((match = codeBlockRegex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push(
-        <p key={lastIndex} className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-300">
-          {text.slice(lastIndex, match.index)}
-        </p>
+  const pushProse = (prose: string, key: number) => {
+    prose
+      .split(/\n{2,}/)
+      .filter((p) => p.trim())
+      .forEach((para, i) =>
+        parts.push(
+          <p key={`${key}-${i}`} className="whitespace-pre-wrap text-chalk">
+            {renderInline(para.trim(), `${key}-${i}`)}
+          </p>
+        )
       )
-    }
-    parts.push(
-      <CodeBlock key={match.index} language={match[1]} code={match[2].trim()} />
-    )
+  }
+
+  while ((match = codeBlockRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) pushProse(text.slice(lastIndex, match.index), lastIndex)
+    parts.push(<CodeBlock key={`code-${match.index}`} language={match[1]} code={match[2].trim()} />)
     lastIndex = match.index + match[0].length
   }
-
-  if (lastIndex < text.length) {
-    parts.push(
-      <p key={lastIndex} className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-300">
-        {text.slice(lastIndex)}
-      </p>
-    )
-  }
-
-  return parts.length > 0 ? parts : [
-    <p key={0} className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-300">{text}</p>
-  ]
+  if (lastIndex < text.length) pushProse(text.slice(lastIndex), lastIndex)
+  return parts
 }

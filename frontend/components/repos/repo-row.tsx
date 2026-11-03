@@ -1,45 +1,23 @@
 import Link from "next/link"
-import { cn } from "@/lib/utils"
+import { formatDate } from "@/lib/format"
 import type { Repository } from "@/types"
 
 export function RepoRow({ repo }: { repo: Repository }) {
   return (
-    <Link
-      href={`/dashboard/repos/${repo.id}`}
-      className="group flex items-center justify-between border-b border-white/[0.04] px-5 py-3.5 transition-colors hover:bg-white/[0.02]"
-    >
-      <div className="flex items-center gap-3 min-w-0">
-        <div
-          className={cn(
-            "h-1.5 w-1.5 flex-shrink-0 rounded-full",
-            repo.indexed ? "bg-emerald-500" : "bg-zinc-600",
-          )}
-        />
-        <span className="truncate font-mono text-[13px] text-zinc-200 group-hover:text-zinc-50">
-          {repo.full_name}
-        </span>
-        {repo.description && (
-          <span className="hidden truncate text-[12px] text-zinc-600 sm:block">
-            — {repo.description}
-          </span>
-        )}
-      </div>
-
-      <div className="ml-4 flex flex-shrink-0 items-center gap-4">
-        {repo.indexed_at && (
-          <span className="hidden font-mono text-[10px] text-zinc-600 sm:block">
-            indexed {new Date(repo.indexed_at).toLocaleDateString()}
-          </span>
-        )}
-        <span
-          className={cn(
-            "font-mono text-[10px]",
-            repo.indexed ? "text-emerald-500" : "text-zinc-600",
-          )}
-        >
-          {repo.indexed ? "indexed" : "not indexed"}
-        </span>
-      </div>
-    </Link>
+    <li className="border-b border-kerb first:border-t">
+      <Link
+        href={`/dashboard/repos/${repo.id}`}
+        className="group grid gap-1 rounded-[var(--radius-control)] py-4 md:grid-cols-[1fr_12rem] md:gap-6"
+      >
+        <div className="min-w-0">
+          <p className="break-words font-bold text-chalk group-hover:text-signal">{repo.name}</p>
+          <p className="break-all font-mono text-[0.875rem] text-fog">{repo.full_name}</p>
+          {repo.description && <p className="mt-1 text-fog">{repo.description}</p>}
+        </div>
+        <p className={repo.indexed ? "text-route md:text-right" : "text-fog md:text-right"}>
+          {repo.indexed ? `Indexed ${formatDate(repo.indexed_at)}` : "Not indexed yet"}
+        </p>
+      </Link>
+    </li>
   )
 }
