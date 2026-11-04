@@ -35,10 +35,11 @@ export default function LoginPage() {
   const [info, setInfo] = useState("")
   const [loading, setLoading] = useState(false)
 
-  const supabase = createClient()
+  // Created on use, not during render: the page is prerendered at build time, when demo builds have no Supabase keys
+  const supabase = () => createClient()
 
   const signInWithGitHub = async () => {
-    await supabase.auth.signInWithOAuth({
+    await supabase().auth.signInWithOAuth({
       provider: "github",
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
@@ -48,7 +49,7 @@ export default function LoginPage() {
   }
 
   const signInWithGoogle = async () => {
-    await supabase.auth.signInWithOAuth({
+    await supabase().auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     })
@@ -58,7 +59,7 @@ export default function LoginPage() {
     e.preventDefault()
     setError("")
     setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await supabase().auth.signInWithPassword({ email, password })
     setLoading(false)
     if (error) setError(error.message)
     else window.location.href = "/dashboard"
@@ -69,7 +70,7 @@ export default function LoginPage() {
     setError("")
     setInfo("")
     setLoading(true)
-    const { error } = await supabase.auth.signUp({
+    const { error } = await supabase().auth.signUp({
       email,
       password,
       options: { data: { full_name: name } },
