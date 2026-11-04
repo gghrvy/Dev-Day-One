@@ -147,7 +147,7 @@ async def _events(result: dict, delay: float) -> AsyncIterator[dict]:
 def _chat(mode: str):
     async def endpoint(request: Request):
         question = await _validated_question(request)
-        allowed, retry_after, reason = request.app.state.demo_limiter.check(visitor_key(request))
+        allowed, retry_after, reason = request.app.state.demo_limiter.check(visitor_key(request, request.app.state.demo_client_ip_header))
         if not allowed:
             message = (
                 "The demo has answered a lot of questions this hour. Try again later."

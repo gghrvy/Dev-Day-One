@@ -8,9 +8,17 @@ WINDOW_SECONDS = 3600
 MAX_TRACKED_VISITORS = 10_000
 
 
-def visitor_key(request: Request) -> str:
-    """The LAST X-Forwarded-For entry is the one our host's proxy appended; earlier entries are
-    whatever the visitor sent and can be faked. Fall back to the socket peer."""
+def visitor_key(request: Request, client_ip_header: str = "") -> str:
+    """Who is asking, for the per-visitor limit.
+
+    1. client_ip_header (e.g. CF-Connecting-IP): set by the edge proxy, which overwrites any value the
+       visitor sends. Render sits behind Cloudflare; checked live, the visitor can fake X-Forwarded-For.
+    2. Otherwise the LAST X-Forwarded-For entry (the one our host appended), then the socket peer.
+    """
+    if client_ip_header:
+        edge_ip = request.headers.get(client_ip_header, "").strip()
+        if edge_ip:
+            return _bucket(edge_ip)
     forwarded = request.headers.get("x-forwarded-for", "")
     entries = [e.strip() for e in forwarded.split(",") if e.strip()]
     raw = entries[-1] if entries else (request.client.host if request.client else "unknown")

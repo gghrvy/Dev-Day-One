@@ -39,6 +39,7 @@ def _mount_demo(app: FastAPI, s: Settings) -> None:
     app.state.demo_limiter = HourlyLimiter(s.DEMO_ASK_PER_VISITOR_PER_HOUR, s.DEMO_ASK_GLOBAL_PER_HOUR)
     app.state.demo_answers = AnswerCache()
     app.state.demo_stream_delay = s.DEMO_STREAM_DELAY
+    app.state.demo_client_ip_header = s.DEMO_CLIENT_IP_HEADER.strip().lower()
     app.add_middleware(DemoAllowListMiddleware)
     app.include_router(demo_router)
 

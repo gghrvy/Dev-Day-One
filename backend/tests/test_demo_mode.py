@@ -345,3 +345,29 @@ def test_a_full_hour_of_questions_hits_the_rate_limit_not_the_message_limit():
         r = c.post(f"/repos/{SAMPLE}/ask", json={"messages": msgs}, headers={"x-forwarded-for": "6.6.6.6"})
         msgs.append({"id": f"a{i}", "role": "assistant", "parts": [{"type": "text", "text": "answer"}]})
     assert r.status_code == 429
+
+
+# ── Live finding: Render sits behind Cloudflare, so the visitor IP comes from CF-Connecting-IP ──
+
+def test_cf_connecting_ip_is_the_visitor_key_when_present():
+    c = make_client(DEMO_ASK_PER_VISITOR_PER_HOUR=2, DEMO_ASK_GLOBAL_PER_HOUR=100)
+    body = {"messages": [{"id": "m1", "role": "user", "parts": [{"type": "text", "text": "auth"}]}]}
+    # The visitor rotates X-Forwarded-For freely; Cloudflare's header stays their real IP.
+    for i in range(3):
+        h = {"x-forwarded-for": f"10.1.{i}.{i}", "cf-connecting-ip": "198.51.100.5"}
+        r = c.post(f"/repos/{SAMPLE}/ask", json=body, headers=h)
+        assert r.status_code == (200 if i < 2 else 429)
+
+
+def test_falls_back_to_last_forwarded_for_without_cf_header():
+    c = make_client(DEMO_ASK_PER_VISITOR_PER_HOUR=1, DEMO_ASK_GLOBAL_PER_HOUR=100)
+    assert ask(c, "auth", xff="1.1.1.1, 7.7.7.8").status_code == 200
+    assert ask(c, "auth", xff="2.2.2.2, 7.7.7.8").status_code == 429
+
+
+def test_client_ip_header_can_be_disabled_for_hosts_without_cloudflare():
+    c = make_client(DEMO_ASK_PER_VISITOR_PER_HOUR=1, DEMO_ASK_GLOBAL_PER_HOUR=100, DEMO_CLIENT_IP_HEADER="")
+    body = {"messages": [{"id": "m1", "role": "user", "parts": [{"type": "text", "text": "auth"}]}]}
+    # with the header disabled, a forged CF-Connecting-IP must not create a fresh bucket
+    assert c.post(f"/repos/{SAMPLE}/ask", json=body, headers={"x-forwarded-for": "7.7.7.9", "cf-connecting-ip": "1.1.1.1"}).status_code == 200
+    assert c.post(f"/repos/{SAMPLE}/ask", json=body, headers={"x-forwarded-for": "7.7.7.9", "cf-connecting-ip": "2.2.2.2"}).status_code == 429

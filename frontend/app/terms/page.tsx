@@ -1,11 +1,13 @@
 import Link from "next/link"
 import { LogoMark } from "@/components/ui/logo-mark"
 import { SkipLink } from "@/components/layout/skip-link"
+import { DemoNotice } from "@/components/demo/demo-notice"
 
 export default function TermsPage() {
   return (
     <div className="min-h-screen">
       <SkipLink />
+      <DemoNotice />
       <main id="main" tabIndex={-1} className="mx-auto max-w-[68ch] px-5 py-12 md:py-16">
         <Link href="/" className="mb-10 inline-flex min-h-11 items-center gap-2.5 rounded-[var(--radius-control)]">
           <LogoMark size={26} />

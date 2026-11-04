@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     DEMO_ASK_PER_VISITOR_PER_HOUR: int = 20
     DEMO_ASK_GLOBAL_PER_HOUR: int = 1000
     DEMO_STREAM_DELAY: float = 0.012
+    # Header the edge proxy sets to the real visitor IP (Render runs behind Cloudflare). Empty = not trusted.
+    DEMO_CLIENT_IP_HEADER: str = "cf-connecting-ip"
 
     @field_validator("DEMO_MODE", mode="before")
     @classmethod
